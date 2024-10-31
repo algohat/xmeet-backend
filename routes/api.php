@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\AuthController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/interest', [AuthController::class, 'getInterest']);
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::post('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
@@ -23,10 +24,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 
     Route::get('random-user/{postal_code}', [AuthController::class, 'getRandomUserByPostalCode']);
-    Route::post('user-subscription', [AuthController::class, 'subscribeToPackage']);
     Route::get('all-users', [AuthController::class, 'getAllUsers']);
     Route::get('users/filter', [AuthController::class, 'filterUsers']);
     Route::get('check-subscription', [AuthController::class, 'checkSubscriptionStatus']);
 
-
+    Route::post('subscription', [AuthController::class, 'subscribeToPackage']);
+    Route::get('success', [AuthController::class, 'success'])->name('paypal.success');
+    Route::get('cancel', [AuthController::class, 'cancel'])->name('paypal.cancel');
 });

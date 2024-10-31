@@ -4,10 +4,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Interest;
 use App\Models\Package;
 use App\Models\Subscription;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -15,9 +17,24 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Srmklive\PayPal\Services\PayPal as PayPalClient;
+
+
 
 class AuthController extends Controller
 {
+
+
+
+    public function getInterest()
+    {
+
+
+        $interests = Interest::all();
+        return response()->json($interests);
+
+    }
+
     // Register a new user
     public function register(Request $request)
     {
@@ -199,25 +216,7 @@ class AuthController extends Controller
 
 
 
-    public function subscribeToPackage(Request $request)
-    {
-        $request->validate(['package_id' => 'required|exists:packages,id']);
-        $package = Package::findOrFail($request->package_id);
 
-        $startDate = Carbon::now();
-        $endDate = $startDate->copy()->addDays($package->duration);
-
-        Subscription::updateOrCreate(
-            ['user_id' => auth()->id()],
-            [
-                'package_id' => $package->id,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-            ]
-        );
-
-        return response()->json(['message' => 'Subscription successful'], 200);
-    }
 
     public function checkSubscriptionStatus()
     {
@@ -238,6 +237,7 @@ class AuthController extends Controller
     public function getAllUsers(Request $request)
     {
         $subscription = Subscription::where('user_id', auth()->id())
+            ->where('status', 'active')
             ->where('end_date', '>', Carbon::now())
             ->first();
 
@@ -269,6 +269,105 @@ class AuthController extends Controller
 
 
 
+    public function subscribeToPackage(Request $request)
+    {
+        $request->validate([
+            'package_id' => 'required|exists:packages,id'
+        ]);
+
+        $package = Package::findOrFail($request->package_id);
+        $startDate = now();
+        $endDate = $startDate->copy()->addDays($package->duration);
+
+        // Step 1: Create the subscription record with a pending status
+        $subscription = Subscription::create([
+            'user_id' => auth()->id(),
+            'package_id' => $package->id,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'status' => 'pending',
+        ]);
+
+        $provider = new PayPalClient();
+        $provider->setApiCredentials(config('paypal'));
+        $paypalToken = $provider->getAccessToken();
+
+        // Step 2: Create PayPal order with subscription details
+        $response = $provider->createOrder([
+            "intent" => "CAPTURE",
+            "application_context" => [
+                "return_url" => route('paypal.success', ['subscription_id' => $subscription->id]),
+                "cancel_url" => route('paypal.cancel', ['subscription_id' => $subscription->id])
+            ],
+            "purchase_units" => [
+                [
+                    "amount" => [
+                        "currency_code" => "USD",
+                        "value" => $package->price,
+                    ],
+                ],
+            ],
+        ]);
+
+        // Step 3: Handle PayPal response and return approval link
+        if (isset($response['id']) && $response['id'] != null) {
+            foreach ($response['links'] as $link) {
+                if ($link['rel'] === 'approve') {
+                    return response()->json([
+                        'status' => 'success',
+                        'approval_link' => $link['href'],
+                        'order_id' => $response['id'],
+                        'subscription_id' => $subscription->id,
+                    ], 200);
+                }
+            }
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to create PayPal order',
+        ], 400);
+    }
+
+
+    public function success(Request $request)
+    {
+        $orderId = $request->query('token');
+        $subscriptionId = $request->query('subscription_id');
+
+        $subscription = Subscription::findOrFail($subscriptionId);
+
+
+        $subscription->update([
+            'status' => 'active',
+            'start_date' => now(),
+            'end_date' => now()->addDays($subscription->package->duration),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Payment completed successfully.',
+            'order_id' => $orderId,
+            'subscription_id' => $subscriptionId,
+        ]);
+    }
+
+
+
+    public function cancel(Request $request)
+    {
+        $subscriptionId = $request->query('subscription_id');
+
+        $subscription = Subscription::findOrFail($subscriptionId);
+        if ($subscription->status === 'pending') {
+            $subscription->update(['status' => 'canceled']);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Payment was canceled.',
+        ]);
+    }
 
 
 }

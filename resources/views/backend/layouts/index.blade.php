@@ -197,13 +197,23 @@
   <li class="nav-label" style="color:gray;">Menu</li>
 
 
-  <li>
-    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-      <i class="icon-grid menu-icon"></i><span class="nav-text">User Info</span>
-  </a>
-  <ul aria-expanded="false">
-      <li><a href="{{ route('user.index')  }}">Users List</a></li></ul>
-</li>
+        <li>
+            <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                <i class="icon-grid menu-icon"></i><span class="nav-text">User Info</span>
+            </a>
+            <ul aria-expanded="false">
+                <li><a href="{{ route('user.index')  }}">Users List</a></li></ul>
+        </li>
+
+
+
+        <li>
+            <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                <i class="icon-grid menu-icon"></i><span class="nav-text">Interests</span>
+            </a>
+            <ul aria-expanded="false">
+                <li><a href="{{ route('interests.index')  }}">Insterest Lists</a></li></ul>
+        </li>
 
 
 
@@ -211,7 +221,7 @@
 
 
 
-</ul>
+    </ul>
 </div>
 </div>
 
