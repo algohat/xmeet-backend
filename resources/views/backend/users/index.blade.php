@@ -1,3 +1,5 @@
+@php use Illuminate\Support\Facades\DB; @endphp
+
 @extends('backend.layouts.index')
 @section('content')
 
@@ -15,70 +17,92 @@
                             </div>
 
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered zero-configuration">
-                                <thead>
-                                <tr class="bg-primary text-white">
-                                    <th>SL.</th>
-                                    <th>Personal Info.</th>
-                                    <th>Post Code</th>
-                                    <th>Email</th>
-                                    <th>Interest</th>
-                                    <th>Join Date</th>
-                                    <th>Action</th>
-                                </tr>
-                                </thead>
+                            <div class="table-responsive">
+                                <table class="table table-bordered zero-configuration">
+                                    <thead>
+                                    <tr class="bg-primary text-white">
+                                        <th>SL.</th>
+                                        <th>Personal Info.</th>
+                                        <th>Post Code</th>
+                                        <th>Email</th>
+                                        <th>Interest</th>
+                                        <th>Subscription</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
 
 
+                                    @if(isset($users))
+                                        @foreach($users as $key=>$item)
+                                            <tr>
+                                                <td>{{ $key+1 }}</td>
+                                                <th>
+                                                    Name: {{ $item->name }}<br>
+                                                    Phone: {{ $item->phone }}<br>
+                                                    Age: {{ $item->age }}<br>
 
-                                @if(isset($users))
-                                    @foreach($users as $key=>$item)
-                                        <tr>
-                                            <td>{{ $key+1 }}</td>
-                                            <th>
-                                                Name: {{ $item->name }}<br>
-                                                Phone: {{ $item->phone }}<br>
-                                                Age: {{ $item->age }}<br>
+                                                </th>
+                                                <td>{{ $item->post_code }}</td>
+                                                <td>{{ $item->email }}</td>
+                                                <th>
+                                                    @foreach(explode(',', $item->interest) as $interest)
+                                                        <button
+                                                            class="btn btn-primary btn-sm">{{ trim($interest) }}</button>
+                                                    @endforeach
+                                                </th>
 
-                                            </th>
-                                            <td>{{ $item->post_code }}</td>
-                                            <td>{{ $item->email }}</td>
-                                            <th>
-                                                @foreach(explode(',', $item->interest) as $interest)
-                                                    <button class="btn btn-primary btn-sm">{{ trim($interest) }}</button>
-                                                @endforeach
-                                            </th>
-                                            <td>{{ $item->created_at }}</td>
+                                                <td>
+                                                    @php
+                                                      $package = DB::table('subscriptions')
+                                                      ->where('user_id',$item->id)
+                                                      ->latest()
+                                                      ->where('status','active')
+                                                      ->first();
 
-                                            <td>
-                                                <a  class="btn btn-danger btn-sm text-white" onclick="return confirmDelete({{ $item->id  }})">
-                                                    <i class="fa fa-trash"></i>
-                                                </a>
+                                                    @endphp
 
-                                                <form id="delete-form-{{ $item->id }}"
-                                                      action="{{ route('user.delete', $item->id) }}" method="POST"
-                                                      style="display: none;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
+                                                    @if(isset($package))
+                                                    @if ($package->start_date <= now() && $package->end_date >= now() && $package->status == 'active')
+                                                        <span class="btn btn-primary btn-sm">Active</span>
+                                                        <div class="mt-2">
+                                                            <b> End Date: {{ $package->end_date }}</b>
+                                                        </div>
+                                                    @else
+                                                        <span class="btn btn-warning text-white btn-sm">Inactive</span>
+                                                    @endif
+                                                    @endif
+
+                                                </td>
+
+                                                <td>
+                                                    <a class="btn btn-danger btn-sm text-white"
+                                                       onclick="return confirmDelete({{ $item->id  }})">
+                                                        <i class="fa fa-trash"></i>
+                                                    </a>
+
+                                                    <form id="delete-form-{{ $item->id }}"
+                                                          action="{{ route('user.delete', $item->id) }}" method="POST"
+                                                          style="display: none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
 
 
-                                            </td>
+                                                </td>
 
-                                        </tr>
+                                            </tr>
 
+                                        @endforeach
+                                    @endif
 
-                                    @endforeach
-                                @endif
-
-                            </table>
+                                </table>
+                            </div>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     </div>
 

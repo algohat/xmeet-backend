@@ -10,7 +10,10 @@ class UserlistController extends Controller
 {
     public function index()
     {
-        $users = User::query()->latest()->get();
+
+        $users = User::query()->latest() ->get();
+
+
         return view('backend.users.index',compact('users'));
 
     }

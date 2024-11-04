@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
-
+use DB;
 
 
 class AuthController extends Controller
@@ -68,6 +68,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'user' => $user
         ], 201);
 
 
@@ -84,6 +85,8 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
+        $subscription = Subscription::where('user_id', $user->id)->where('status','active')->latest()->first();
+
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -96,6 +99,8 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'user' => $user,
+            'subscription' => $subscription
         ]);
     }
 
@@ -130,9 +135,11 @@ class AuthController extends Controller
     public function showProfile()
     {
         $user = Auth::user();
+        $subscription = Subscription::where('user_id', $user->id)->where('status','active')->latest()->first();
 
         return response()->json([
-            'user' => $user
+            'user' => $user,
+            'subscription' => $subscription
         ], 200);
     }
 
@@ -179,195 +186,226 @@ class AuthController extends Controller
         }
     }
 
-
-    public function getRandomUserByPostalCode(Request $request, $postal_code)
+    public function getRandomUserByPostalCode(Request $request)
     {
+
+
+
+        $postal_code = Auth::user()->post_code;
         $gender = $request->query('gender');
         $age = $request->query('age');
+    $interests = $request->query('interests'); // New parameter for interests
 
-        $cacheKey = 'random_users_' . $postal_code . '_' . $gender . '_' . $age;
+    $cacheKey = 'random_users_' . $postal_code . '_' . $gender . '_' . $age . '_' . $interests;
 
-        $randomUsers = Cache::remember($cacheKey, 86400, function () use ($postal_code, $gender, $age) {
+    $randomUsers = Cache::remember($cacheKey, 86400, function () use ($postal_code, $gender, $age, $interests) {
+        $query = User::where('post_code', $postal_code);
 
-            $query = User::where('post_code', $postal_code);
-
-            if ($gender) {
-                $query->where('gender', $gender);
-            }
-
-            if ($age) {
-                $ageRange = explode('-', $age);
-                if (count($ageRange) === 2) {
-                    $query->whereBetween('age', [trim($ageRange[0]), trim($ageRange[1])]);
-                }
-            }
-
-            return $query->inRandomOrder()->limit(10)->get();
-        });
-
-        // Check if any random users were found
-        if ($randomUsers->isEmpty()) {
-            return response()->json(['message' => 'No users found for the provided postal code'], 404);
+        if ($gender) {
+            $query->where('gender', $gender);
         }
 
-        return response()->json(['users' => $randomUsers], 200);
-    }
-
-
-
-
-
-
-    public function checkSubscriptionStatus()
-    {
-        $userId = auth()->id();
-
-        $subscription = Subscription::where('user_id', $userId)
-            ->where('end_date', '>', Carbon::now())
-            ->first();
-
-        if ($subscription) {
-            return response()->json(['status' => 'active', 'end_date' => $subscription->end_date], 200);
-        } else {
-            return response()->json(['status' => 'expired'], 200);
-        }
-    }
-
-
-    public function getAllUsers(Request $request)
-    {
-        $subscription = Subscription::where('user_id', auth()->id())
-            ->where('status', 'active')
-            ->where('end_date', '>', Carbon::now())
-            ->first();
-
-        if (!$subscription) {
-            return response()->json(['message' => 'Subscription required or expired'], 403);
-        }
-
-        $query = User::query();
-
-        if ($request->has('gender')) {
-            $query->where('gender', $request->query('gender'));
-        }
-
-        if ($request->has('postal_code')) {
-            $query->where('post_code', $request->query('postal_code'));
-        }
-
-        if ($request->has('age')) {
-            $ageRange = explode('-', $request->query('age'));
+        if ($age) {
+            $ageRange = explode('-', $age);
             if (count($ageRange) === 2) {
                 $query->whereBetween('age', [trim($ageRange[0]), trim($ageRange[1])]);
             }
         }
 
-        $users = $query->get();
+        if ($interests) {
+            $interestArray = explode(',', $interests); // Example: 'football,music'
+            $query->whereJsonContains('interests', $interestArray);
+        }
 
-        return response()->json(['users' => $users], 200);
+        return $query->inRandomOrder()->limit(10)->get();
+    });
+
+    if ($randomUsers->isEmpty()) {
+        return response()->json(['message' => 'No users found for the provided postal code'], 404);
+    }
+
+    return response()->json(['users' => $randomUsers], 200);
+}
+
+
+
+
+
+
+public function checkSubscriptionStatus()
+{
+    $userId = auth()->id();
+
+    $subscription = Subscription::where('user_id', $userId)
+    ->where('end_date', '>', Carbon::now())
+    ->first();
+
+    if ($subscription) {
+        return response()->json(['status' => 'active', 'end_date' => $subscription->end_date], 200);
+    } else {
+        return response()->json(['status' => 'expired'], 200);
+    }
+}
+
+
+public function getAllUsers(Request $request)
+{
+    $subscription = Subscription::where('user_id', auth()->id())
+    ->where('status', 'active')
+    ->where('end_date', '>', Carbon::now())
+    ->first();
+
+    if (!$subscription) {
+        return response()->json(['message' => 'Subscription required or expired'], 403);
+    }
+
+    $query = User::query();
+
+    if ($request->has('gender')) {
+        $query->where('gender', $request->query('gender'));
+    }
+
+    if ($request->has('postal_code')) {
+        $query->where('post_code', $request->query('postal_code'));
+    }
+
+    if ($request->has('age')) {
+        $ageRange = explode('-', $request->query('age'));
+        if (count($ageRange) === 2) {
+            $query->whereBetween('age', [trim($ageRange[0]), trim($ageRange[1])]);
+        }
+    }
+
+    if ($request->has('interests')) {
+        $interestArray = explode(',', $request->query('interests'));
+        $query->whereJsonContains('interests', $interestArray);
     }
 
 
+    if ($request->has('postal_code')) {
+     $users = $query->get();
+ }
+ else{
 
-    public function subscribeToPackage(Request $request)
-    {
-        $request->validate([
-            'package_id' => 'required|exists:packages,id'
-        ]);
+    $users = $query->where('post_code',Auth::user()->post_code)->get();
+}
 
-        $package = Package::findOrFail($request->package_id);
-        $startDate = now();
-        $endDate = $startDate->copy()->addDays($package->duration);
+
+return response()->json(['users' => $users], 200);
+}
+
+
+
+public function subscribeToPackage(Request $request)
+{
+    $request->validate([
+        'package_id' => 'required|exists:packages,id'
+    ]);
+
+    $package = Package::findOrFail($request->package_id);
+    $startDate = now();
+    $endDate = $startDate->copy()->addDays($package->duration);
 
         // Step 1: Create the subscription record with a pending status
-        $subscription = Subscription::create([
-            'user_id' => auth()->id(),
-            'package_id' => $package->id,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'status' => 'pending',
-        ]);
+    $subscription = Subscription::create([
+        'user_id' => auth()->id(),
+        'package_id' => $package->id,
+        'start_date' => $startDate,
+        'end_date' => $endDate,
+        'status' => 'pending',
+    ]);
 
-        $provider = new PayPalClient();
-        $provider->setApiCredentials(config('paypal'));
-        $paypalToken = $provider->getAccessToken();
+    $provider = new PayPalClient();
+    $provider->setApiCredentials(config('paypal'));
+    $paypalToken = $provider->getAccessToken();
 
         // Step 2: Create PayPal order with subscription details
-        $response = $provider->createOrder([
-            "intent" => "CAPTURE",
-            "application_context" => [
-                "return_url" => route('paypal.success', ['subscription_id' => $subscription->id]),
-                "cancel_url" => route('paypal.cancel', ['subscription_id' => $subscription->id])
-            ],
-            "purchase_units" => [
-                [
-                    "amount" => [
-                        "currency_code" => "USD",
-                        "value" => $package->price,
-                    ],
+    $response = $provider->createOrder([
+        "intent" => "CAPTURE",
+        "application_context" => [
+            "return_url" => route('paypal.success', ['subscription_id' => $subscription->id]),
+            "cancel_url" => route('paypal.cancel', ['subscription_id' => $subscription->id])
+        ],
+        "purchase_units" => [
+            [
+                "amount" => [
+                    "currency_code" => "USD",
+                    "value" => $package->price,
                 ],
             ],
-        ]);
+        ],
+    ]);
 
         // Step 3: Handle PayPal response and return approval link
-        if (isset($response['id']) && $response['id'] != null) {
-            foreach ($response['links'] as $link) {
-                if ($link['rel'] === 'approve') {
-                    return response()->json([
-                        'status' => 'success',
-                        'approval_link' => $link['href'],
-                        'order_id' => $response['id'],
-                        'subscription_id' => $subscription->id,
-                    ], 200);
-                }
+    if (isset($response['id']) && $response['id'] != null) {
+        foreach ($response['links'] as $link) {
+            if ($link['rel'] === 'approve') {
+                return response()->json([
+                    'status' => 'success',
+                    'approval_link' => $link['href'],
+                    'order_id' => $response['id'],
+                    'subscription_id' => $subscription->id,
+                ], 200);
             }
         }
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Failed to create PayPal order',
-        ], 400);
     }
 
-
-    public function success(Request $request)
-    {
-        $orderId = $request->query('token');
-        $subscriptionId = $request->query('subscription_id');
-
-        $subscription = Subscription::findOrFail($subscriptionId);
+    return response()->json([
+        'status' => 'error',
+        'message' => 'Failed to create PayPal order',
+    ], 400);
+}
 
 
-        $subscription->update([
-            'status' => 'active',
-            'start_date' => now(),
-            'end_date' => now()->addDays($subscription->package->duration),
-        ]);
+public function success(Request $request)
+{
+    $orderId = $request->query('token');
+    $subscriptionId = $request->query('subscription_id');
+        // $captureResponse = captureOrder($orderId);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Payment completed successfully.',
-            'order_id' => $orderId,
-            'subscription_id' => $subscriptionId,
-        ]);
+    $subscription = Subscription::findOrFail($subscriptionId);
+
+
+    $subscription->update([
+        'status' => 'active',
+        'start_date' => now(),
+        'end_date' => now()->addDays($subscription->package->duration),
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Payment completed successfully.',
+        'order_id' => $orderId,
+        'subscription_id' => $subscriptionId,
+    ]);
+}
+
+
+
+public function cancel(Request $request)
+{
+    $subscriptionId = $request->query('subscription_id');
+
+    $subscription = Subscription::findOrFail($subscriptionId);
+    if ($subscription->status === 'pending') {
+        $subscription->update(['status' => 'canceled']);
     }
 
+    return response()->json([
+        'status' => 'error',
+        'message' => 'Payment was canceled.',
+    ]);
+}
 
 
-    public function cancel(Request $request)
-    {
-        $subscriptionId = $request->query('subscription_id');
 
-        $subscription = Subscription::findOrFail($subscriptionId);
-        if ($subscription->status === 'pending') {
-            $subscription->update(['status' => 'canceled']);
-        }
+public function packages(){
 
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Payment was canceled.',
-        ]);
-    }
+    $package = DB::table('packages')->get();
+    return response()->json($package);
+
+
+}
 
 
 }

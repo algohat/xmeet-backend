@@ -13,19 +13,36 @@ class PackageSeeder extends Seeder
     {
         $packages = [
             [
-                'name' => 'Monthly',
-                'duration' => 30, // 30 days
-                'price' => 9,
+                'name' => 'Unbegrenzt',
+                'type' => 'Monthly',
+                'duration' => 30,
+                'price' => 6,
             ],
-            [
-                'name' => 'Yearly',
-                'duration' => 365, // 365 days
+             [
+                'name' => 'Unbegrenzt',
+                'type' => 'Yearly',
+                'duration' => 365,
+                'price' => 48,
+            ],
+
+             [
+                'name' => 'Premium',
+                'type' => 'Monthly',
+                'duration' => 30,
                 'price' => 12,
             ],
+
+             [
+                'name' => 'Premium',
+                'type' => 'Yearly',
+                'duration' => 365,
+                'price' => 100,
+            ],
+
         ];
 
         foreach ($packages as $package) {
-            Package::updateOrCreate(['name' => $package['name']], $package);
+            Package::Create($package);
         }
     }
 }

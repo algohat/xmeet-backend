@@ -4,6 +4,7 @@
 use App\Http\Controllers\backend\AdminAuthController;
 use App\Http\Controllers\backend\AdminController;
 use App\Http\Controllers\backend\InterestController;
+use App\Http\Controllers\backend\SubscriptionController;
 use App\Http\Controllers\backend\UserlistController;
 use Illuminate\Support\Facades\Route;
 

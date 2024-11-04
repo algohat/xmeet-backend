@@ -11,9 +11,13 @@ use App\Http\Controllers\Api\AuthController;
 //    return $request->user();
 // });
 
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/interest', [AuthController::class, 'getInterest']);
+Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+Route::get('/packages', [AuthController::class, 'packages']);
+
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::post('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
@@ -21,9 +25,9 @@ Route::post('change-password', [AuthController::class, 'changePassword'])->middl
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile', [AuthController::class, 'showProfile']);
     Route::post('profile', [AuthController::class, 'updateProfile']);
-    Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 
-    Route::get('random-user/{postal_code}', [AuthController::class, 'getRandomUserByPostalCode']);
+
+    Route::get('random-user', [AuthController::class, 'getRandomUserByPostalCode']);
     Route::get('all-users', [AuthController::class, 'getAllUsers']);
     Route::get('users/filter', [AuthController::class, 'filterUsers']);
     Route::get('check-subscription', [AuthController::class, 'checkSubscriptionStatus']);
