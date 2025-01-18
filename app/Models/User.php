@@ -27,6 +27,8 @@ class User extends Authenticatable
         'gender',
         'interest',
         'post_code',
+        'is_verified',
+        'otp_verified_at',
     ];
 
     /**
