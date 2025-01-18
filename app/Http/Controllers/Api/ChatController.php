@@ -7,6 +7,8 @@ use App\Models\Chat;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class ChatController extends Controller
@@ -36,11 +38,57 @@ class ChatController extends Controller
             return response()->json(['errors' => ['receiver_id' => 'You cannot send message to yourself']], 422);
         }
 
-        Chat::create([
+        $isFirstMessage = !Chat::where('sender_id', Auth::user()->id)
+            ->where('receiver_id', $receiverId)
+            ->exists();
+
+        // Create the chat message
+        $chat = Chat::create([
             'sender_id' => Auth::user()->id,
             'receiver_id' => $receiverId,
             'message' => $request->message,
         ]);
+
+        if ($isFirstMessage) {
+            // Fetch the admin email from the database
+            $adminEmail = DB::table('admins')->where('id', 1)->value('email');
+
+            if (!$adminEmail) {
+                return response()->json(['error' => 'Admin email not configured'], 500);
+            }
+
+            // Format the email subject
+            $subject = "[CHAT] Von: " . Auth::user()->name .
+                " | An: " . $receiverIdCheck->name .
+                " | Chat-ID: " . $chat->id;
+
+            // Prepare email body as plain text (message content only)
+            $emailBody = $request->message;
+
+            // Send the email notification to Admin
+            try {
+                Mail::raw($emailBody, function ($message) use ($adminEmail, $subject) {
+                    $message->to($adminEmail)
+                        ->subject($subject);
+                });
+            } catch (\Exception $e) {
+                // Log the error for debugging
+                \Log::error('Failed to send first-time message notification to admin: ' . $e->getMessage());
+            }
+
+            // Send the email notification to Receiver
+            try {
+                Mail::raw($emailBody, function ($message) use ($receiverIdCheck, $subject) {
+                    $message->to($receiverIdCheck->email)
+                        ->subject($subject);
+                });
+            } catch (\Exception $e) {
+                // Log the error for debugging
+                \Log::error('Failed to send first-time message notification to receiver: ' . $e->getMessage());
+            }
+        }
+
+
 
         return response()->json(['message' => 'Message set successfully'], 200);
     }

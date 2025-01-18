@@ -238,53 +238,65 @@ class UserController extends Controller
         }
     }
 
-
     public function getAllUsers(Request $request)
     {
-//        $subscription = Subscription::where('user_id', auth()->id())
-//            ->where('status', 'active')
-//            ->where('end_date', '>', Carbon::now())
-//            ->first();
-//
-//        if (!$subscription) {
-//            return response()->json(['message' => 'Subscription required or expired'], 403);
-//        }
-
         $query = User::query()->where('id', '!=', auth()->id())->where('is_verified', 1);
 
+        // Filter by gender if provided
         if ($request->has('gender')) {
             $query->where('gender', $request->query('gender'));
         }
 
+        // Filter by postal code if provided
         if ($request->has('postal_code')) {
             $query->where('post_code', $request->query('postal_code'));
-        } else {
-            $query->where('post_code', auth()->user()->post_code);
         }
 
+        // Age filtering based on input format like 25-30
         if ($request->has('age')) {
             $ageRange = explode('-', $request->query('age'));
             if (count($ageRange) === 2) {
-                $query->whereBetween('age', [trim($ageRange[0]), trim($ageRange[1])]);
+                $minAge = trim($ageRange[0]);
+                $maxAge = trim($ageRange[1]);
+                $query->whereBetween('age', [$minAge, $maxAge]);
             }
         }
 
-        if ($request->has('interests')) {
-            $interestArray = explode(',', $request->query('interests'));
+        // Filter by interest if provided
+        if ($request->has('interest')) {
+            $interestArray = explode(',', $request->query('interest'));
             $query->where(function ($q) use ($interestArray) {
                 foreach ($interestArray as $interest) {
-                    $q->orWhere('interest', 'LIKE', '%' . trim($interest) . '%');
+                    $q->orWhereRaw("FIND_IN_SET(?, interest)", [trim($interest)]);
                 }
             });
         }
 
-        // Pagination
-        $limit = $request->query('limit', 20);
-        $users = $query->paginate($limit);
+        // Fetch users with the authenticated user's post_code first
+        $postCodeUsers = clone $query;
+        $postCodeUsers->where('post_code', auth()->user()->post_code);
 
-        // Hide the 'phone' column from the response
-        $users->getCollection()->transform(function ($user) {
-            return $user->makeHidden('phone');
+        // Fetch users with other post_codes
+        $otherPostCodeUsers = clone $query;
+        $otherPostCodeUsers->where('post_code', '!=', auth()->user()->post_code);
+
+        // Combine both queries to get users in order of post_code
+        $users = $postCodeUsers->union($otherPostCodeUsers);
+        $users = $users->paginate($request->query('limit', 20));
+
+        // Get the IDs of the users that the authenticated user has already chatted with
+        $chatUsers = DB::table('chats')
+            ->where('sender_id', auth()->id()) // Only check for `auth()->id()` as `sender_id`
+            ->pluck('receiver_id'); // Get the `receiver_id` values where the sender is the logged-in user
+
+        // Add `is_chat_started` field to each user
+        $users->getCollection()->transform(function ($user) use ($chatUsers) {
+            $user->makeHidden('phone'); // Hide the phone number
+
+            // Check if the current user's ID matches any `receiver_id` in the `chatUsers` collection
+            $user->is_chat_started = $chatUsers->contains($user->id) ? 1 : 0;
+
+            return $user;
         });
 
         return response()->json($users, 200);
