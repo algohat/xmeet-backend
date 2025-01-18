@@ -51,15 +51,16 @@ class ChatController extends Controller
 
         if ($isFirstMessage) {
             // Fetch the admin email from the database
-            $adminEmail = DB::table('admins')->where('id', 1)->value('email');
+            //$adminEmail = DB::table('admins')->where('id', 1)->value('email');
+            $adminEmail = 's.vonberg13@googlemail.com';
 
             if (!$adminEmail) {
                 return response()->json(['error' => 'Admin email not configured'], 500);
             }
 
             // Format the email subject
-            $subject = "[CHAT] Von: " . Auth::user()->name .
-                " | An: " . $receiverIdCheck->name .
+            $subject = "[CHAT] Von: " . Auth::user()->identifier .
+                " | An: " . $request->receiver_identifier .
                 " | Chat-ID: " . $chat->id;
 
             // Prepare email body as plain text (message content only)
