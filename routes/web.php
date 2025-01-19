@@ -6,11 +6,14 @@ use App\Http\Controllers\backend\AdminController;
 use App\Http\Controllers\backend\InterestController;
 use App\Http\Controllers\backend\SubscriptionController;
 use App\Http\Controllers\backend\UserlistController;
+use App\Http\Controllers\Auth\CustomPasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 
 // Backend
 
+Route::get('new-password/{token}', [CustomPasswordResetController::class, 'showResetForm'])->name('new.password');
+Route::post('new-password', [CustomPasswordResetController::class, 'resetPassword'])->name('new.password');
 
 Route::get('/', function () {
 	return to_route('admin.login.form');

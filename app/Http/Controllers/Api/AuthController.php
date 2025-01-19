@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
@@ -341,7 +342,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function forgotPassword(Request $request)
+    public function forgotPasswordGenerate(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
@@ -389,7 +390,39 @@ class AuthController extends Controller
         return $password;
     }
 
-    public function forgotPasswordOld(Request $request)
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+
+        $user = User::where('email', $request->email)->first();
+        $token = Str::random(60);
+
+        $checkToken = DB::table('password_reset_tokens')->where('email', $user->email)->first();
+        if ($checkToken) {
+            DB::table('password_reset_tokens')->where('email', $user->email)->update([
+                'token' => $token,
+                'created_at' => now(),
+            ]);
+        } else {
+            DB::table('password_reset_tokens')->insert([
+                'email' => $user->email,
+                'token' => $token,
+                'created_at' => now(),
+            ]);
+        }
+
+        // Send the reset email
+        Mail::send('emails.reset-password', ['user' => $user, 'token' => $token], function ($message) use ($user) {
+            $message->to($user->email)->subject('Password Reset Request');
+        });
+
+        return response()->json(['message' => 'Password reset link sent successfully.'], 200);
+    }
+
+    public function forgotPasswordLaravel(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',

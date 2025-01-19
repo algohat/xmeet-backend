@@ -19,7 +19,7 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/interest', [AuthController::class, 'getInterest']);
-Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::get('/packages', [AuthController::class, 'packages']);
 Route::get('/set-identifier', [UserController::class, 'setIdentifier']);
 

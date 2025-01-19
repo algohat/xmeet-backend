@@ -248,8 +248,8 @@ class UserController extends Controller
         }
 
         // Filter by postal code if provided
-        if ($request->has('postal_code')) {
-            $query->where('post_code', $request->query('postal_code'));
+        if ($request->has('post_code')) {
+            $query->where('post_code', $request->query('post_code'));
         }
 
         // Age filtering based on input format like 25-30
