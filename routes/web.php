@@ -5,6 +5,7 @@ use App\Http\Controllers\backend\AdminAuthController;
 use App\Http\Controllers\backend\AdminController;
 use App\Http\Controllers\backend\InterestController;
 use App\Http\Controllers\backend\SubscriptionController;
+use App\Http\Controllers\backend\PackageController;
 use App\Http\Controllers\backend\UserlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,8 @@ Route::prefix('admin')->middleware('auth.admin')->group(function () {
     Route::delete('/user-delete/{id}', [UserlistController::class, 'delete'])->name('user.delete');
 
     Route::resource('interests', InterestController::class);
+
+    Route::resource('packages', PackageController::class);
 
 
 });

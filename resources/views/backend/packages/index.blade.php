@@ -11,11 +11,11 @@
 
                         <div class="row  align-items-center">
                             <div class="col-7">
-                                <strong>All Interests</strong>
+                                <strong>All Packages</strong>
                             </div>
 
                             <div class="col-5">
-                                <button class="btn btn-primary float-right" data-toggle="modal" data-target="#interestModal">Add Interest</button>
+                                <button class="btn btn-primary float-right" data-toggle="modal" data-target="#interestModal">Add Package</button>
 
 
                             </div>
@@ -33,10 +33,10 @@
                                 </tr>
                                 </thead>
                                 <tbody id="interestTable">
-                                @foreach($interests as $key=>$interest)
-                                    <tr data-id="{{ $interest->id }}">
+                                @foreach($packages as $key=>$package)
+                                    <tr data-id="{{ $package->id }}">
                                         <td>{{  $key+1  }}</td>
-                                        <td>{{ $interest->name }}</td>
+                                        <td>{{ $package->name }}</td>
                                         <td>
                                             <button class="btn btn-info edit-button" data-toggle="modal" data-target="#interestModal">Edit</button>
                                             <button class="btn btn-danger delete-button">Delete</button>
@@ -48,18 +48,18 @@
                         </div>
 
                         <!-- Modal -->
-                        <div class="modal fade" id="interestModal" tabindex="-1" role="dialog" aria-labelledby="interestModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="interestModal" tabindex="-1" role="dialog" aria-labelledby="packageModalLabel" aria-hidden="true">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="interestModalLabel">Add Interest</h5>
+                                        <h5 class="modal-title" id="packageModalLabel">Add Package</h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
                                     <div class="modal-body">
-                                        <form id="interestForm">
-                                            <input type="hidden" id="interestId" name="id">
+                                        <form id="packageForm">
+                                            <input type="hidden" id="packageId" name="id">
                                             <div class="form-group">
                                                 <label for="name">Name</label>
                                                 <input type="text" class="form-control" id="name" name="name" required>
@@ -89,10 +89,10 @@
         $(document).ready(function () {
             // Add or Update Interest
             $('#saveButton').click(function () {
-                let formData = $('#interestForm').serialize();
-                let interestId = $('#interestId').val();
-                let url = interestId ? `/admin/interests/${interestId}` : '/admin/interests';
-                let method = interestId ? 'PUT' : 'POST';
+                let formData = $('#packageForm').serialize();
+                let packageId = $('#packageId').val();
+                let url = packageId ? `/admin/packages/${packageId}` : '/admin/packages';
+                let method = packageId ? 'PUT' : 'POST';
 
                 $.ajax({
                     url: url,
@@ -114,9 +114,9 @@
                 let id = row.data('id');
                 let name = row.find('td:eq(1)').text();
 
-                $('#interestId').val(id);
+                $('#packageId').val(id);
                 $('#name').val(name);
-                $('#interestModalLabel').text('Edit Interest');
+                $('#packageModalLabel').text('Edit Package');
             });
 
             // Delete Interest
@@ -126,7 +126,7 @@
 
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: 'This will delete the interest!',
+                    text: 'This will delete the item!',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
@@ -135,7 +135,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/admin/interests/${id}`,
+                            url: `/admin/packages/${id}`,
                             type: 'DELETE',
                             success: function (response) {
 

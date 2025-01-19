@@ -37,8 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('random-user', [UserController::class, 'getRandomUserByPostalCode']);
     Route::get('all-users', [UserController::class, 'getAllUsers']);
     Route::get('users/filter', [UserController::class, 'filterUsers']);
-    Route::get('check-subscription', [UserController::class, 'checkSubscriptionStatus']);
 
+    Route::get('check-subscription', [UserController::class, 'checkSubscriptionStatus']);
     Route::post('subscription', [UserController::class, 'subscribeToPackage']);
     Route::get('success', [UserController::class, 'success'])->name('paypal.success');
     Route::get('cancel', [UserController::class, 'cancel'])->name('paypal.cancel');
