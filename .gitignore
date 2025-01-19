@@ -4,7 +4,7 @@
 /public/hot
 /public/uploads
 /public/storage
-/storage/*.
+/storage/*
 storage/logs/*
 /vendor
 .env
