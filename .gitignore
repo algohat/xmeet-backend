@@ -5,8 +5,7 @@
 /public/uploads
 /public/storage
 /storage/*.key
-/storage/logs/*
-!/storage/logs/.gitignore
+storage/logs/*
 /vendor
 .env
 .env.backup
