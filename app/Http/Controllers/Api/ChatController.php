@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Chat;
+use App\Models\ChatOpen;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +29,7 @@ class ChatController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Invalid receiver identifier'], 400);
         }
-        $receiverIdCheck = User::find($receiverId);
+        $receiverIdCheck = User::where('id', $receiverId)->where('is_disable', 0)->first();
 
         if (!$receiverIdCheck) {
             return response()->json(['errors' => ['receiver_id' => 'Invalid receiver ID']], 422);
@@ -38,8 +39,14 @@ class ChatController extends Controller
             return response()->json(['errors' => ['receiver_id' => 'You cannot send message to yourself']], 422);
         }
 
-        $isFirstMessage = !Chat::where('sender_id', Auth::user()->id)
-            ->where('receiver_id', $receiverId)
+        $isFirstMessage = !ChatOpen::where(function ($query) use ($receiverId) {
+            $query->where('sender_id', Auth::user()->id)
+                ->where('receiver_id', $receiverId);
+        })
+            ->orWhere(function ($query) use ($receiverId) {
+                $query->where('sender_id', $receiverId)
+                    ->where('receiver_id', Auth::user()->id);
+            })
             ->exists();
 
         // Create the chat message
@@ -50,45 +57,50 @@ class ChatController extends Controller
         ]);
 
         if ($isFirstMessage) {
-            // Fetch the admin email from the database
+            // Create the chat open record
+            ChatOpen::create([
+                'chat_id' => $chat->id,
+                'sender_id' => Auth::user()->id,
+                'receiver_id' => $receiverId,
+                'is_opened' => 1,
+                'opened_at' => now()
+            ]);
+
             //$adminEmail = DB::table('admins')->where('id', 1)->value('email');
             $adminEmail = 's.vonberg13@googlemail.com';
 
-            if (!$adminEmail) {
-                return response()->json(['error' => 'Admin email not configured'], 500);
-            }
-
-            // Format the email subject
-            $subject = "[CHAT] Von: " . Auth::user()->identifier .
+            $subject = "[" . config('app.name') . "][CHAT] Von: " . Auth::user()->identifier .
                 " | An: " . $request->receiver_identifier .
                 " | Chat-ID: " . $chat->id;
 
-            // Prepare email body as plain text (message content only)
-            $emailBody = $request->message;
+            $sender = Auth::user();
 
             // Send the email notification to Admin
             try {
-                Mail::raw($emailBody, function ($message) use ($adminEmail, $subject) {
+                Mail::send('emails.chat_open_notification', [
+                    'sender' => $sender,
+                    'chat_text' => $request->message,
+                ], function ($message) use ($adminEmail, $subject) {
                     $message->to($adminEmail)
                         ->subject($subject);
                 });
             } catch (\Exception $e) {
-                // Log the error for debugging
                 \Log::error('Failed to send first-time message notification to admin: ' . $e->getMessage());
             }
 
             // Send the email notification to Receiver
             try {
-                Mail::raw($emailBody, function ($message) use ($receiverIdCheck, $subject) {
+                Mail::send('emails.chat_open_notification', [
+                    'sender' => $sender,
+                    'chat_text' => $request->message,
+                ], function ($message) use ($receiverIdCheck, $subject) {
                     $message->to($receiverIdCheck->email)
                         ->subject($subject);
                 });
             } catch (\Exception $e) {
-                // Log the error for debugging
                 \Log::error('Failed to send first-time message notification to receiver: ' . $e->getMessage());
             }
         }
-
 
 
         return response()->json(['message' => 'Message set successfully'], 200);
@@ -116,7 +128,7 @@ class ChatController extends Controller
         }
 
         $userId = auth()->id();
-        $messages = Chat::where(function($query) use ($userId, $receiverId) {
+        $messages = Chat::where(function ($query) use ($userId, $receiverId) {
             $query->where('sender_id', $userId)->where('receiver_id', $receiverId)
                 ->orWhere('sender_id', $receiverId)->where('receiver_id', $userId);
         })->orderBy('created_at', 'asc')->get();

@@ -30,6 +30,7 @@ Route::post('change-password', [AuthController::class, 'changePassword'])->middl
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile', [UserController::class, 'showProfile']);
     Route::post('profile', [UserController::class, 'updateProfile']);
+    Route::get('user/disable', [UserController::class, 'disableAccount']);
 
     Route::post('set-message', [ChatController::class, 'setMessage']);
     Route::get('view-chat', [ChatController::class, 'viewChat']);
