@@ -32,8 +32,18 @@ class UserController extends Controller
         $chatOpenCounter = $user->chatOpens()->count();
         $user->chatOpenedUsers;
 
+        $MessageSendCount = DB::table('chat_opens')
+            ->where('sender_id', auth()->id())
+            ->count();
+
+        $MessageReceiveCount = DB::table('chat_opens')
+            ->where('receiver_id', auth()->id())
+            ->count();
+
         return response()->json([
             'total_chat_open' => $chatOpenCounter,
+            'total_message_send' => $MessageSendCount,
+            'total_message_received' => $MessageReceiveCount,
             'user' => $user,
             'subscription' => $subscription
         ], 200);
@@ -194,14 +204,31 @@ class UserController extends Controller
             ->orWhere('receiver_id', auth()->id())
             ->count();
 
+        $MessageSendCount = DB::table('chat_opens')
+            ->where('sender_id', auth()->id())
+            ->count();
+
+        $MessageReceiveCount = DB::table('chat_opens')
+            ->where('receiver_id', auth()->id())
+            ->count();
+
         $users->getCollection()->transform(function ($user) {
             $user->makeHidden('phone'); // Hide the phone number
             $user->is_chat_started = isChatStarted($user->id);
+            $user->message_send_count = DB::table('chat_opens')
+                ->where('sender_id', $user->id)
+                ->count();
+
+            $user->message_received_count = DB::table('chat_opens')
+                ->where('receiver_id', $user->id)
+                ->count();
             return $user;
         });
 
         $usersData = $users->toArray();
-        $usersData['total_chat_open'] = $chatOpenCounter;
+        $usersData['total_chat_opened'] = $chatOpenCounter;
+        $usersData['total_message_send'] = $MessageSendCount;
+        $usersData['total_message_received'] = $MessageReceiveCount;
 
         return response()->json($usersData, 200);
     }
