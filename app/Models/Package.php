@@ -9,6 +9,7 @@ class Package extends Model
 {
     use HasFactory;
     protected $guarded = ['id'];
+    protected $fillable = ['name', 'type', 'price', 'duration', 'is_paid'];
 
     public function subscriptions()
     {

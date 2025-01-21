@@ -32,8 +32,21 @@ Route::prefix('admin')->middleware('auth.admin')->group(function () {
 
     Route::resource('interests', InterestController::class);
 
-    Route::resource('packages', PackageController::class);
-
+    //package
+    Route::prefix('packages')->group(function () {
+        Route::get('/list', [PackageController::class, 'index'])->name('admin.packages.list');
+        Route::post('/store', [PackageController::class, 'store'])->name('admin.packages.store');
+        Route::post('/update/{id}', [PackageController::class, 'update'])->name('admin.packages.update');
+        Route::get('/status/{id}', [PackageController::class, 'status'])->name('admin.packages.status');
+        Route::delete('/{id}', [PackageController::class, 'destroy'])->name('admin.packages.destroy');
+        Route::prefix('/feature')->group(function () {
+            Route::get('/list/{id}', [PackageController::class, 'featureList'])->name('admin.packages.feature.list');
+            Route::post('/store', [PackageController::class, 'featureStore'])->name('admin.packages.feature.store');
+            Route::post('/update/{id}', [PackageController::class, 'featureUpdate'])->name('admin.packages.feature.update');
+            Route::get('/status/{id}', [PackageController::class, 'featureStatus'])->name('admin.packages.feature.status');
+            Route::delete('/{id}', [PackageController::class, 'featureDestroy'])->name('admin.packages.feature.destroy');
+        });
+    });
 
 });
 

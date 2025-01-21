@@ -6,7 +6,7 @@
 
             <li>
                 <a href="{{ route('admin.dashboard') }}" aria-expanded="false">
-                    <i class="fa fa-bar-chart menu-icon"></i><span class="nav-text">Dashboard11</span>
+                    <i class="fa fa-bar-chart menu-icon"></i><span class="nav-text">Dashboard</span>
                 </a>
             </li>
 
@@ -39,7 +39,7 @@
                     <i class="fa fa-gift menu-icon"></i><span class="nav-text">Packages</span>
                 </a>
                 <ul aria-expanded="false">
-                    <li><a href="{{ route('packages.index')  }}">Package Lists</a></li>
+                    <li><a href="{{ route('admin.packages.list')  }}">Package Lists</a></li>
                 </ul>
             </li>
 

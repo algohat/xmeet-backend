@@ -11,12 +11,12 @@
 
                         <div class="row  align-items-center">
                             <div class="col-7">
-                                <strong>All Packages</strong>
+                                <strong>Package Feature</strong>
                             </div>
 
                             <div class="col-5">
                                 <button class="btn btn-primary float-right" data-toggle="modal"
-                                        data-target="#managePackageModal">Add Package
+                                        data-target="#managePackageModal">Add Feature
                                 </button>
 
 
@@ -28,46 +28,30 @@
                             <thead>
                             <tr class="bg-primary text-white">
                                 <th>SL.</th>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Price</th>
-                                <th>Duration</th>
-                                <th>Feature</th>
-                                <th>Is Paid</th>
-                                <th>Status</th>
+                                <th>Package</th>
+                                <th>Feature Type</th>
+                                <th>Value</th>
+                                <th>Time Limit</th>
+                                <th>Time option</th>
+                                <th>Description</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody id="packageTable">
-                            @foreach($packages as $key=>$package)
-                                <tr data-id="{{ $package->id }}">
+                            @foreach($features as $key=>$item)
+                                <tr data-id="{{ $item->id }}">
                                     <td>{{  $key+1  }}</td>
-                                    <td>{{ $package->name }}</td>
-                                    <td>{{ $package->type }}</td>
-                                    <td>{{ $package->price }}</td>
-                                    <td>{{ $package->duration }}</td>
-                                    <td>
-                                        <a href="{{route('admin.packages.feature.list', $package->id)}}" class="btn btn-sm btn-outline-warning" title="Features">
-                                            <i class="fa fa-external-link"></i> View
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <span class="btn btn-sm {{ $package->is_paid == 1 ? 'btn-outline-success' : 'btn-outline-danger' }}">
-                                            {{ $package->is_paid == 1 ? 'YES' : 'NO' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="form-check form-switch form-check-custom form-check-solid me-10">
-                                            <input class="form-check-input h-20px w-30px" type="checkbox" value="" id="flexSwitch20x30 welcome_status_{{$package->id}}" {{$package?($package->status==1?'checked':''):''}}
-                                            onclick="location.href='{{route('admin.packages.status',[$package->id])}}'"> <span>{{ $package->status == 1 ? 'Active' : 'Inactive'}}</span>
-                                        </div>
-                                    </td>
-
+                                    <td>{{ $item->package_id }}</td>
+                                    <td>{{ $item->feature_type }}</td>
+                                    <td>{{ $item->value }}</td>
+                                    <td>{{ $item->time_limit }}</td>
+                                    <td>{{ $item->time_option }}</td>
+                                    <td>{{ $item->description }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-info edit-button" data-toggle="modal" title="Edit"
                                                 data-target="#managePackageModal"><i class="fa fa-pencil-square-o"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-danger delete-button" title="Delete" data-id="{{ $package->id }}">
+                                        <button class="btn btn-sm btn-danger delete-button" title="Delete" data-id="{{ $item->id }}">
                                             <i class="fa fa-trash"></i>
                                         </button>
                                     </td>
