@@ -19,7 +19,7 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/interest', [AuthController::class, 'getInterest']);
-Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::get('/packages', [AuthController::class, 'packages']);
 Route::get('/set-identifier', [UserController::class, 'setIdentifier']);
 
@@ -30,6 +30,7 @@ Route::post('change-password', [AuthController::class, 'changePassword'])->middl
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile', [UserController::class, 'showProfile']);
     Route::post('profile', [UserController::class, 'updateProfile']);
+    Route::get('user/disable', [UserController::class, 'disableAccount']);
 
     Route::post('set-message', [ChatController::class, 'setMessage']);
     Route::get('view-chat', [ChatController::class, 'viewChat']);

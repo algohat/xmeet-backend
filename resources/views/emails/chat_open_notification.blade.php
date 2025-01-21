@@ -34,19 +34,36 @@
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>New First-Time Message Notification</h1>
-    <p><strong>Sender:</strong> {{ $senderName }} (ID: {{ $senderId }})</p>
-    <p><strong>Receiver:</strong> {{ $receiverName }} (ID: {{ $receiverId }})</p>
-    <p><strong>Message Content:</strong></p>
-    <blockquote>
-        {{ $message }}
-    </blockquote>
-    <p>This is a notification that the above sender has initiated a conversation with the receiver for the first time.</p>
-    <div class="footer">
+<div class="container" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <p><strong>Name:</strong> {{ $sender->name ?? 'N/A' }}; <strong>Geschlecht:</strong> {{ $sender->gender ?? 'N/A' }}; <strong>Age:</strong> {{ $sender->age ?? 'N/A' }}; <strong>Zipcode:</strong> {{ $sender->post_code ?? 'N/A' }}</p>
+    <hr>
+    <p><strong>Message:</strong></p>
+    <p>{{ $chat_text ?? 'N/A' }}</p>
+    <hr>
+    <div style="margin: 20px 0; display: flex; gap: 10px;">
+        <!-- Block User Button -->
+        <a href="{{ $block_user_url ?? '#' }}"
+           style="display: inline-block; padding: 5px 10px; background-color: #ff4d4f; color: #fff; text-decoration: none;
+              font-weight: bold; border-radius: 3px; text-align: center; font-size: 14px; border: 1px solid #ff4d4f;"
+           onmouseover="this.style.backgroundColor='#fff'; this.style.color='#ff4d4f';"
+           onmouseout="this.style.backgroundColor='#ff4d4f'; this.style.color='#fff';">
+            Block User
+        </a>
+
+        <!-- Kontakt Button -->
+        <a href="https://xmeet.algohat.com/contact"
+           style="display: inline-block; padding: 5px 10px; background-color: #007bff; color: #fff; text-decoration: none;
+              font-weight: bold; border-radius: 3px; text-align: center; font-size: 14px; border: 1px solid #007bff;"
+           onmouseover="this.style.backgroundColor='#fff'; this.style.color='#007bff';"
+           onmouseout="this.style.backgroundColor='#007bff'; this.style.color='#fff';">
+            Kontakt
+        </a>
+    </div>
+    <div class="footer" style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
         <p>Thank you,</p>
         <p>Xmeet</p>
     </div>
 </div>
+
 </body>
 </html>

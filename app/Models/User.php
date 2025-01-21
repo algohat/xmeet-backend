@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -29,6 +30,8 @@ class User extends Authenticatable
         'post_code',
         'is_verified',
         'otp_verified_at',
+        'last_login_at',
+        'is_disable',
     ];
 
     /**
@@ -51,12 +54,28 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    public function getLastLoginAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
 
     public function subscriptions()
     {
 
         return $this->hasMany(Subscription::class);
     }
+    public function chatOpens()
+    {
+        return $this->hasMany(ChatOpen::class, 'sender_id')
+            ->orWhere('receiver_id', $this->id);
+    }
+
+    public function chatOpenedUsers()
+    {
+        return $this->belongsToMany(User::class, 'chat_opens', 'sender_id', 'receiver_id')
+            ->orWhere('chat_opens.receiver_id', $this->id);
+    }
+
 
 
 }
