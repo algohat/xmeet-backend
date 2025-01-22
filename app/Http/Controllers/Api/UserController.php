@@ -163,15 +163,15 @@ class UserController extends Controller
     {
         $query = User::query()->where('id', '!=', auth()->id())->where('is_verified', 1);
 
-        if ($request->has('gender')) {
+        if ($request->has('gender') && $request->query('gender') !== null) {
             $query->where('gender', $request->query('gender'));
         }
 
-        if ($request->has('post_code')) {
+        if ($request->has('post_code') && $request->query('post_code') !== null) {
             $query->where('post_code', $request->query('post_code'));
         }
 
-        if ($request->has('age')) {
+        if ($request->has('age') && $request->query('age') !== null) {
             $ageRange = explode('-', $request->query('age'));
             if (count($ageRange) === 2) {
                 $minAge = trim($ageRange[0]);
@@ -180,7 +180,7 @@ class UserController extends Controller
             }
         }
 
-        if ($request->has('interest')) {
+        if ($request->has('interest') && $request->query('interest') !== null) {
             $interestArray = explode(',', $request->query('interest'));
             $query->where(function ($q) use ($interestArray) {
                 foreach ($interestArray as $interest) {
