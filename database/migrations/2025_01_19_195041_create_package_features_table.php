@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('package_id')->constrained()->onDelete('cascade');
             $table->string('feature_type')->nullable()->index();
+            $table->string('title')->nullable();
             $table->integer('value')->nullable();
             $table->integer('time_limit')->nullable();
             $table->string('time_option')->nullable();
-            $table->string('description')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

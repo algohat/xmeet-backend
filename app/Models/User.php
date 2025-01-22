@@ -63,9 +63,14 @@ class User extends Authenticatable
 
     public function subscriptions()
     {
-
         return $this->hasMany(Subscription::class);
     }
+
+    public function userPackage()
+    {
+        return $this->hasOne(UserPackage::class)->where('status', 2)->with(['userPackageFeature']);
+    }
+
     public function chatOpens()
     {
         return $this->hasMany(ChatOpen::class, 'sender_id')

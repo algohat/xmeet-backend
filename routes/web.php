@@ -4,7 +4,7 @@
 use App\Http\Controllers\backend\AdminAuthController;
 use App\Http\Controllers\backend\AdminController;
 use App\Http\Controllers\backend\InterestController;
-use App\Http\Controllers\backend\SubscriptionController;
+use App\Http\Controllers\backend\PackageFeatureController;
 use App\Http\Controllers\backend\PackageController;
 use App\Http\Controllers\backend\UserlistController;
 use App\Http\Controllers\Auth\CustomPasswordResetController;
@@ -40,11 +40,11 @@ Route::prefix('admin')->middleware('auth.admin')->group(function () {
         Route::get('/status/{id}', [PackageController::class, 'status'])->name('admin.packages.status');
         Route::delete('/{id}', [PackageController::class, 'destroy'])->name('admin.packages.destroy');
         Route::prefix('/feature')->group(function () {
-            Route::get('/list/{id}', [PackageController::class, 'featureList'])->name('admin.packages.feature.list');
-            Route::post('/store', [PackageController::class, 'featureStore'])->name('admin.packages.feature.store');
-            Route::post('/update/{id}', [PackageController::class, 'featureUpdate'])->name('admin.packages.feature.update');
-            Route::get('/status/{id}', [PackageController::class, 'featureStatus'])->name('admin.packages.feature.status');
-            Route::delete('/{id}', [PackageController::class, 'featureDestroy'])->name('admin.packages.feature.destroy');
+            Route::get('/list/{id}', [PackageFeatureController::class, 'list'])->name('admin.packages.feature.list');
+            Route::post('/store', [PackageFeatureController::class, 'store'])->name('admin.packages.feature.store');
+            Route::post('/update/{id}', [PackageFeatureController::class, 'update'])->name('admin.packages.feature.update');
+            Route::get('/status/{id}', [PackageFeatureController::class, 'status'])->name('admin.packages.feature.status');
+            Route::delete('/{id}', [PackageFeatureController::class, 'destroy'])->name('admin.packages.feature.destroy');
         });
     });
 

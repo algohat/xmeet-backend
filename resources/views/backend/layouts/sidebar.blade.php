@@ -36,7 +36,7 @@
 
             <li>
                 <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                    <i class="fa fa-gift menu-icon"></i><span class="nav-text">Packages</span>
+                    <i class="fa fa-cube menu-icon"></i><span class="nav-text">Packages</span>
                 </a>
                 <ul aria-expanded="false">
                     <li><a href="{{ route('admin.packages.list')  }}">Package Lists</a></li>

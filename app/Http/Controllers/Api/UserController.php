@@ -30,6 +30,7 @@ class UserController extends Controller
         $subscription = Subscription::where('user_id', $user->id)->where('status', 'active')->latest()->first();
 
         $chatOpenCounter = $user->chatOpens()->count();
+        $user->userPackage;
         $user->chatOpenedUsers;
 
         $MessageSendCount = DB::table('chat_opens')
@@ -514,6 +515,10 @@ class UserController extends Controller
 
         try {
             DB::transaction(function () use ($user) {
+                $userPackage = $user->userPackage;
+                if ($userPackage) {
+                    $userPackage->delete();
+                }
                 $user->delete();
             });
 
@@ -525,7 +530,7 @@ class UserController extends Controller
 
     public function setIdentifier()
     {
-        $users = User::get();
+        $users = User::whereNull('identifier')->get();
         foreach ($users as $user) {
             $userHash = encryptUserId($user->id);
             $user->identifier = $userHash;

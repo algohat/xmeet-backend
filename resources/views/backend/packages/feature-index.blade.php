@@ -11,15 +11,15 @@
 
                         <div class="row  align-items-center">
                             <div class="col-7">
-                                <strong>Package Feature</strong>
+                                <p><strong>Package Feature</strong></p>
+                                <p>Package Name: <strong><span class="text-warning">{{ strtoupper($package->name) }}</span></strong> : Type: <strong><span class="text-warning">{{ strtoupper($package->type) }}</span></strong></p>
+
                             </div>
 
                             <div class="col-5">
                                 <button class="btn btn-primary float-right" data-toggle="modal"
-                                        data-target="#managePackageModal">Add Feature
+                                        data-target="#managePackageModal"><i class="icon-plus"></i> New Feature
                                 </button>
-
-
                             </div>
                         </div>
 
@@ -61,13 +61,12 @@
                         </table>
                     </div>
 
-                    <!-- Modal -->
                     <div class="modal fade" id="managePackageModal" tabindex="-1" role="dialog"
                          aria-labelledby="packageModalLabel" aria-hidden="true">
                         <div class="modal-dialog" role="document">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="packageModalLabel">Add Package</h5>
+                                    <h5 class="modal-title" id="packageModalLabel">Add Package Feature</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -76,35 +75,51 @@
                                     <form id="packageForm">
                                         <input type="hidden" id="packageId" name="id">
                                         <div class="form-group">
-                                            <label for="name">Name</label>
-                                            <input type="text" class="form-control" id="name" name="name" required>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="type">Type</label>
-                                            <select class="form-control" name="type" id="type" required>
-                                                <option value="General">General</option>
-                                                <option value="Monthly">Monthly</option>
-                                                <option value="Yearly">Yearly</option>
+                                            <label for="package_id">Package Info</label>
+                                            <select class="form-control" name="package_id" id="package_id" readonly>
+                                                <option value="{{$package->id}}">{{$package->name}}</option>
                                             </select>
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="price">Price</label>
-                                            <input type="number" class="form-control" id="price" name="price">
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="duration">Duration</label>
-                                            <input type="number" class="form-control" id="duration" name="duration">
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="is_paid">Is Paid</label>
-                                            <select class="form-control" name="is_paid" id="is_paid" required>
-                                                <option value="1">Yes</option>
-                                                <option value="0">No</option>
+                                            <label for="feature_type">Feature Type <span class="text-danger">*</span></label>
+                                            <select class="form-control" name="feature_type" id="feature_type" required>
+                                                <option value="" selected disabled>Select option</option>
+                                                <option value="chat_credit">Chat Credit</option>
                                             </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="title">Title</label>
+                                            <input type="text" class="form-control" id="title" name="title">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="value">Value</label>
+                                            <input type="number" class="form-control" id="value" name="value">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="time_limit">Time limit</label>
+                                            <input type="number" class="form-control" id="time_limit" name="time_limit">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="time_option">Time Option</label>
+                                            <select class="form-control" name="time_option" id="time_option" required>
+                                                <option value="">Unlimited</option>
+                                                <option value="minute">Minute</option>
+                                                <option value="hour">Hour</option>
+                                                <option value="day">Day</option>
+                                                <option value="week">Week</option>
+                                                <option value="month">Month</option>
+                                                <option value="year">Year</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="description">Description</label>
+                                            <textarea class="form-control" id="description" name="description"></textarea>
                                         </div>
 
                                     </form>
@@ -116,7 +131,6 @@
                             </div>
                         </div>
                     </div>
-
 
                 </div>
             </div>
@@ -130,8 +144,8 @@
 
     <script>
         $(document).ready(function () {
-            let baseUrl = `{{ url('admin/packages') }}`;
-            // Add or Update Interest
+            let baseUrl = `{{ url('admin/packages/feature') }}`;
+            // Add or Update Item
             $('#saveButton').click(function () {
                 let formData = $('#packageForm').serialize();
                 let packageId = $('#packageId').val();
@@ -153,36 +167,41 @@
                 });
             });
 
-            // Edit Interest
+            // Edit Item
             $('.edit-button').click(function () {
-                let row = $(this).closest('tr');
-                let id = row.data('id');
-                let name = row.find('td:eq(1)').text().trim();
-                let type = row.find('td:eq(2)').text().trim();
-                let price = row.find('td:eq(3)').text().trim();
-                let duration = row.find('td:eq(4)').text().trim();
-                let isPaid = row.find('td:eq(5)').text().trim() === 'YES' ? 1 : 0;
+                let row = $(this).closest('tr'); // Get the current table row
+                let id = row.data('id'); // Assuming each row has a data-id attribute
+                let feature_type = row.find('td:eq(2)').text().trim(); // Feature Type (adjusted index)
+                let title = row.find('td:eq(1)').text().trim(); // Title (adjusted index)
+                let value = row.find('td:eq(3)').text().trim(); // Value (adjusted index)
+                let timeLimit = row.find('td:eq(4)').text().trim(); // Time Limit (adjusted index)
+                let timeOption = row.find('td:eq(5)').text().trim(); // Time Option (adjusted index)
+                let description = row.find('td:eq(6)').text().trim(); // Description (adjusted index)
 
+                // Populate modal fields
                 $('#packageId').val(id);
-                $('#name').val(name);
-                $('#type').val(type);
-                $('#price').val(price);
-                $('#duration').val(duration);
-                $('#is_paid').val(isPaid);
+                $('#feature_type').val(feature_type); // Populate Feature Type dropdown
+                $('#title').val(title); // Populate Title input
+                $('#value').val(value); // Populate Value input
+                $('#time_limit').val(timeLimit); // Populate Time Limit input
+                $('#time_option').val(timeOption.toLowerCase()); // Populate Time Option dropdown
+                $('#description').val(description); // Populate Description textarea
 
-                $('#packageModalLabel').text('Edit Package');
+                // Update modal title
+                $('#packageModalLabel').text('Edit Package Feature');
 
+                // Show the modal
                 $('#managePackageModal').modal('show');
             });
 
-            // Delete Interest
+            // Delete Item
             $('.delete-button').click(function () {
                 let row = $(this).closest('tr');
                 let id = row.data('id'); // Get the package ID
 
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: 'This will permanently delete the package!',
+                    text: 'This will permanently delete the package feature! All users associated with this package will be affected.',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',

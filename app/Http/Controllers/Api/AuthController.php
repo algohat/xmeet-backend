@@ -4,6 +4,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Libraries\Membership;
 use App\Models\Interest;
 use App\Models\Package;
 use App\Models\Subscription;
@@ -63,6 +64,7 @@ class AuthController extends Controller
         DB::beginTransaction();
 
         try {
+            // Create a new user
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -79,6 +81,14 @@ class AuthController extends Controller
             $user->identifier = $userHash;
             $user->save();
 
+            // Assign default package to the user
+            try {
+                (new Membership())->createUserDefaultPackage($user);
+            } catch (Exception $exception) {
+                return response()->json(['error' => 'Failed to assign package to the user'], 500);
+            }
+
+            // Generate OTP for the user
             $otp = rand(100000, 999999);
             DB::table('user_otps')->updateOrInsert(
                 ['phone' => $user->phone],
@@ -260,7 +270,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::with('userPackage')->where('email', $request->email)->first();
         $subscription = Subscription::where('user_id', $user->id)->where('status', 'active')->latest()->first();
 
 
