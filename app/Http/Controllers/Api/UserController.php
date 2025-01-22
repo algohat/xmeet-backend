@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ExampleJob;
 use App\Models\Interest;
 use App\Models\Package;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Models\UserPackage;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -101,64 +103,23 @@ class UserController extends Controller
         }
     }
 
-    public function subscribeToPackage(Request $request)
+    public function checkCurrentPackage()
     {
-        $request->validate([
-            'package_id' => 'required|exists:packages,id'
-        ]);
+        $userId = auth()->id();
 
-        $package = Package::findOrFail($request->package_id);
-        $startDate = now();
-        $endDate = $startDate->copy()->addDays($package->duration);
+        $current_package = UserPackage::with('userPackageFeature')->where('user_id', $userId)
+            ->where('status', 2)
+            ->first();
 
-        // Step 1: Create the subscription record with a pending status
-        $subscription = Subscription::create([
-            'user_id' => auth()->id(),
-            'package_id' => $package->id,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'status' => 'pending',
-        ]);
+        $subscription = Subscription::where('user_id', $userId)
+            ->where('end_date', '>=', Carbon::now())
+            ->get();
 
-        $provider = new PayPalClient();
-        $provider->setApiCredentials(config('paypal'));
-        $paypalToken = $provider->getAccessToken();
-
-        // Step 2: Create PayPal order with subscription details
-        $response = $provider->createOrder([
-            "intent" => "CAPTURE",
-            "application_context" => [
-                "return_url" => route('paypal.success', ['subscription_id' => $subscription->id]),
-                "cancel_url" => route('paypal.cancel', ['subscription_id' => $subscription->id])
-            ],
-            "purchase_units" => [
-                [
-                    "amount" => [
-                        "currency_code" => "USD",
-                        "value" => $package->price,
-                    ],
-                ],
-            ],
-        ]);
-
-        // Step 3: Handle PayPal response and return approval link
-        if (isset($response['id']) && $response['id'] != null) {
-            foreach ($response['links'] as $link) {
-                if ($link['rel'] === 'approve') {
-                    return response()->json([
-                        'status' => 'success',
-                        'approval_link' => $link['href'],
-                        'order_id' => $response['id'],
-                        'subscription_id' => $subscription->id,
-                    ], 200);
-                }
-            }
+        if ($current_package) {
+            return response()->json(['status' => 'active', 'package' => $current_package, 'subscription' => $subscription], 200);
+        } else {
+            return response()->json(['status' => 'expired'], 200);
         }
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Failed to create PayPal order',
-        ], 400);
     }
 
     public function getAllUsers(Request $request)
@@ -233,6 +194,118 @@ class UserController extends Controller
         $usersData['total_message_received'] = $MessageReceiveCount;
 
         return response()->json($usersData, 200);
+    }
+
+    public function packages()
+    {
+        $package = DB::table('packages')->get();
+        return response()->json($package);
+    }
+
+    public function deleteUser(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string',
+            'confirm_password' => 'required|string|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = auth()->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Password is incorrect.'], 400);
+        }
+
+        try {
+            DB::transaction(function () use ($user) {
+                $userPackage = $user->userPackage;
+                if ($userPackage) {
+                    $userPackage->delete();
+                }
+                $user->delete();
+            });
+
+            return response()->json(['message' => 'User deleted successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred while deleting the user information.'], 500);
+        }
+    }
+
+    public function setIdentifier()
+    {
+        $users = User::whereNull('identifier')->get();
+        foreach ($users as $user) {
+            $userHash = encryptUserId($user->id);
+            $user->identifier = $userHash;
+            $user->save();
+        }
+        return response()->json(['message' => 'User identifiers set successfully'], 200);
+    }
+
+
+    /*Deprecated Functions*/
+
+    public function subscribeToPackage(Request $request)
+    {
+        $request->validate([
+            'package_id' => 'required|exists:packages,id'
+        ]);
+
+        $package = Package::findOrFail($request->package_id);
+        $startDate = now();
+        $endDate = $startDate->copy()->addDays($package->duration);
+
+        // Step 1: Create the subscription record with a pending status
+        $subscription = Subscription::create([
+            'user_id' => auth()->id(),
+            'package_id' => $package->id,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'status' => 'pending',
+        ]);
+
+        $provider = new PayPalClient();
+        $provider->setApiCredentials(config('paypal'));
+        $paypalToken = $provider->getAccessToken();
+
+        // Step 2: Create PayPal order with subscription details
+        $response = $provider->createOrder([
+            "intent" => "CAPTURE",
+            "application_context" => [
+                "return_url" => route('paypal.success', ['subscription_id' => $subscription->id]),
+                "cancel_url" => route('paypal.cancel', ['subscription_id' => $subscription->id])
+            ],
+            "purchase_units" => [
+                [
+                    "amount" => [
+                        "currency_code" => "USD",
+                        "value" => $package->price,
+                    ],
+                ],
+            ],
+        ]);
+
+        // Step 3: Handle PayPal response and return approval link
+        if (isset($response['id']) && $response['id'] != null) {
+            foreach ($response['links'] as $link) {
+                if ($link['rel'] === 'approve') {
+                    return response()->json([
+                        'status' => 'success',
+                        'approval_link' => $link['href'],
+                        'order_id' => $response['id'],
+                        'subscription_id' => $subscription->id,
+                    ], 200);
+                }
+            }
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to create PayPal order',
+        ], 400);
     }
 
     public function forgotPassword(Request $request)
@@ -487,56 +560,6 @@ class UserController extends Controller
             'status' => 'error',
             'message' => 'Payment was canceled.',
         ]);
-    }
-
-
-    public function packages()
-    {
-        $package = DB::table('packages')->get();
-        return response()->json($package);
-    }
-
-    public function deleteUser(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'password' => 'required|string',
-            'confirm_password' => 'required|string|same:password',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $user = auth()->user();
-
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json(['error' => 'Password is incorrect.'], 400);
-        }
-
-        try {
-            DB::transaction(function () use ($user) {
-                $userPackage = $user->userPackage;
-                if ($userPackage) {
-                    $userPackage->delete();
-                }
-                $user->delete();
-            });
-
-            return response()->json(['message' => 'User deleted successfully.'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred while deleting the user information.'], 500);
-        }
-    }
-
-    public function setIdentifier()
-    {
-        $users = User::whereNull('identifier')->get();
-        foreach ($users as $user) {
-            $userHash = encryptUserId($user->id);
-            $user->identifier = $userHash;
-            $user->save();
-        }
-        return response()->json(['message' => 'User identifiers set successfully'], 200);
     }
 
 

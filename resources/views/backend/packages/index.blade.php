@@ -16,7 +16,7 @@
 
                             <div class="col-5">
                                 <button class="btn btn-primary float-right" data-toggle="modal"
-                                        data-target="#managePackageModal">Add Package
+                                        data-target="#managePackageModal"><i class="icon-plus"></i> Add Package
                                 </button>
 
 
@@ -27,11 +27,12 @@
                         <table class="table table-bordered zero-configuration">
                             <thead>
                             <tr class="bg-primary text-white">
-                                <th>SL.</th>
+                                <th>PID.</th>
                                 <th>Name</th>
                                 <th>Type</th>
-                                <th>Price</th>
-                                <th>Duration</th>
+                                <th>Tag</th>
+                                <th>Validity</th>
+                                <th>Price & Duration</th>
                                 <th>Feature</th>
                                 <th>Is Paid</th>
                                 <th>Status</th>
@@ -41,14 +42,30 @@
                             <tbody id="packageTable">
                             @foreach($packages as $key=>$package)
                                 <tr data-id="{{ $package->id }}">
-                                    <td>{{  $key+1  }}</td>
+                                    <td>{{ $package->id }}</td>
                                     <td>{{ $package->name }}</td>
                                     <td>{{ $package->type }}</td>
-                                    <td>{{ $package->price }}</td>
-                                    <td>{{ $package->duration }}</td>
                                     <td>
-                                        <a href="{{route('admin.packages.feature.list', $package->id)}}" class="btn btn-sm btn-outline-warning" title="Features">
-                                            <i class="fa fa-external-link"></i> View
+                                        @php
+                                        if ($package->tag == 'Base') {
+                                            echo '<span class="text-secondary">Base</span>';
+                                        } elseif ($package->tag == 'Gold') {
+                                            echo '<span class="text-warning">Gold</span>';
+                                        } elseif ($package->tag == 'Platinum') {
+                                            echo '<span class="text-success">Platinum</span>';
+                                        } else {
+                                            echo '<span class="text-secondary">'.$package->tag.'</span>';
+                                        }
+                                        @endphp
+                                    </td>
+                                    <td>{{ @$package->validity." ".@$package->validity_type }}</td>
+                                    <td>
+                                        Price: {{ $package->price }};
+                                        Duration: {{ $package->duration }}
+                                    </td>
+                                    <td>
+                                        <a href="{{route('admin.packages.feature.list', $package->id)}}" class="btn btn-sm btn-twitter" title="Features">
+                                            <i class="fa fa-external-link"></i> View Features
                                         </a>
                                     </td>
                                     <td>
@@ -67,9 +84,11 @@
                                         <button class="btn btn-sm btn-info edit-button" data-toggle="modal" title="Edit"
                                                 data-target="#managePackageModal"><i class="fa fa-pencil-square-o"></i>
                                         </button>
+                                        @if($package->id != 1)
                                         <button class="btn btn-sm btn-danger delete-button" title="Delete" data-id="{{ $package->id }}">
                                             <i class="fa fa-trash"></i>
                                         </button>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -92,16 +111,41 @@
                                     <form id="packageForm">
                                         <input type="hidden" id="packageId" name="id">
                                         <div class="form-group">
-                                            <label for="name">Name</label>
+                                            <label for="name">Name <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="name" name="name" required>
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="type">Type</label>
+                                            <label for="type">Type <span class="text-danger">*</span></label>
                                             <select class="form-control" name="type" id="type" required>
                                                 <option value="General">General</option>
                                                 <option value="Monthly">Monthly</option>
                                                 <option value="Yearly">Yearly</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="tag">Tag</label>
+{{--                                            <input type="text" class="form-control" id="tag" name="tag">--}}
+                                            <select class="form-control" name="tag" id="tag" required>
+                                                <option value="Base">Base</option>
+                                                <option value="Gold">Gold</option>
+                                                <option value="Platinum">Platinum</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="validity">Validity <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="validity" name="validity" required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="validity_type">Validity type <span class="text-danger">*</span></label>
+                                            <select class="form-control" name="validity_type" id="validity_type" required>
+                                                <option value="week">Week</option>
+                                                <option value="day">Day</option>
+                                                <option value="month">Month</option>
+                                                <option value="year">Year</option>
                                             </select>
                                         </div>
 
@@ -111,12 +155,12 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="duration">Duration</label>
+                                            <label for="duration">Duration (Total days)</label>
                                             <input type="number" class="form-control" id="duration" name="duration">
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="is_paid">Is Paid</label>
+                                            <label for="is_paid">Is Paid <span class="text-danger">*</span></label>
                                             <select class="form-control" name="is_paid" id="is_paid" required>
                                                 <option value="1">Yes</option>
                                                 <option value="0">No</option>
@@ -147,7 +191,7 @@
     <script>
         $(document).ready(function () {
             let baseUrl = `{{ url('admin/packages') }}`;
-            // Add or Update Interest
+            // Add or Update Item
             $('#saveButton').click(function () {
                 let formData = $('#packageForm').serialize();
                 let packageId = $('#packageId').val();
@@ -169,29 +213,39 @@
                 });
             });
 
-            // Edit Interest
+            // Edit Item
             $('.edit-button').click(function () {
                 let row = $(this).closest('tr');
                 let id = row.data('id');
                 let name = row.find('td:eq(1)').text().trim();
                 let type = row.find('td:eq(2)').text().trim();
-                let price = row.find('td:eq(3)').text().trim();
-                let duration = row.find('td:eq(4)').text().trim();
-                let isPaid = row.find('td:eq(5)').text().trim() === 'YES' ? 1 : 0;
+                let tag = row.find('td:eq(3)').text().trim();
+                let validityText = row.find('td:eq(4)').text().trim().split(' '); // Split validity into value and type
+                let validity = validityText[0];
+                let validity_type = validityText[1];
+                let priceAndDuration = row.find('td:eq(5)').text().trim(); // Extract price and duration
+                let price = priceAndDuration.match(/Price:\s*([\d.]+)/i)?.[1] || '';
+                let duration = priceAndDuration.match(/Duration:\s*([\d.]+)/i)?.[1] || '';
+                let isPaidText = row.find('td:eq(7) span').text().trim(); // Extract isPaid text
+                let isPaid = isPaidText === 'YES' ? "1" : "0";
 
+                // Populate modal fields
                 $('#packageId').val(id);
                 $('#name').val(name);
-                $('#type').val(type);
+                $('#type').val(type); // Select dropdown value
+                $('#tag').val(tag); // Set the tag value
+                $('#validity').val(validity);
+                $('#validity_type').val(validity_type); // Select dropdown value
                 $('#price').val(price);
                 $('#duration').val(duration);
-                $('#is_paid').val(isPaid);
+                $('#is_paid').val(isPaid); // Select dropdown value
 
+                // Update modal title and show modal
                 $('#packageModalLabel').text('Edit Package');
-
                 $('#managePackageModal').modal('show');
             });
 
-            // Delete Interest
+            // Delete Item
             $('.delete-button').click(function () {
                 let row = $(this).closest('tr');
                 let id = row.data('id'); // Get the package ID

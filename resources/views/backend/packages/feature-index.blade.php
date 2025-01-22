@@ -9,16 +9,21 @@
                 <div class="card">
                     <div class="card-body">
 
-                        <div class="row  align-items-center">
+                        <div class="row align-items-center">
                             <div class="col-7">
                                 <p><strong>Package Feature</strong></p>
-                                <p>Package Name: <strong><span class="text-warning">{{ strtoupper($package->name) }}</span></strong> : Type: <strong><span class="text-warning">{{ strtoupper($package->type) }}</span></strong></p>
-
+                                <p>Package Name: <strong><span class="text-warning">{{ strtoupper($package->name) }}</span></strong> ;
+                                    Type: <strong><span class="text-warning">{{ strtoupper($package->type) }}</span></strong> ;
+                                    Tag: <strong><span class="text-danger">{{ strtoupper($package->tag) }}</span></strong>
+                                </p>
                             </div>
 
-                            <div class="col-5">
-                                <button class="btn btn-primary float-right" data-toggle="modal"
-                                        data-target="#managePackageModal"><i class="icon-plus"></i> New Feature
+                            <div class="col-5 d-flex justify-content-end">
+                                <button class="btn btn-info mr-2" onclick="window.history.back();">
+                                    <i class="icon-arrow-left-circle"></i> Package List
+                                </button>
+                                <button class="btn btn-primary" data-toggle="modal" data-target="#managePackageModal">
+                                    <i class="icon-plus"></i> New Feature
                                 </button>
                             </div>
                         </div>
@@ -30,6 +35,7 @@
                                 <th>SL.</th>
                                 <th>Package</th>
                                 <th>Feature Type</th>
+                                <th>Title</th>
                                 <th>Value</th>
                                 <th>Time Limit</th>
                                 <th>Time option</th>
@@ -43,6 +49,7 @@
                                     <td>{{  $key+1  }}</td>
                                     <td>{{ $item->package_id }}</td>
                                     <td>{{ $item->feature_type }}</td>
+                                    <td>{{ $item->title }}</td>
                                     <td>{{ $item->value }}</td>
                                     <td>{{ $item->time_limit }}</td>
                                     <td>{{ $item->time_option }}</td>
@@ -170,22 +177,22 @@
             // Edit Item
             $('.edit-button').click(function () {
                 let row = $(this).closest('tr'); // Get the current table row
-                let id = row.data('id'); // Assuming each row has a data-id attribute
-                let feature_type = row.find('td:eq(2)').text().trim(); // Feature Type (adjusted index)
-                let title = row.find('td:eq(1)').text().trim(); // Title (adjusted index)
-                let value = row.find('td:eq(3)').text().trim(); // Value (adjusted index)
-                let timeLimit = row.find('td:eq(4)').text().trim(); // Time Limit (adjusted index)
-                let timeOption = row.find('td:eq(5)').text().trim(); // Time Option (adjusted index)
-                let description = row.find('td:eq(6)').text().trim(); // Description (adjusted index)
+                let id = row.data('id'); // ID of the feature
+                let feature_type = row.find('td:eq(2)').text().trim(); // Feature Type (2nd column)
+                let title = row.find('td:eq(3)').text().trim(); // Title (3rd column)
+                let value = row.find('td:eq(4)').text().trim(); // Value (4th column)
+                let timeLimit = row.find('td:eq(5)').text().trim(); // Time Limit (5th column)
+                let timeOption = row.find('td:eq(6)').text().trim(); // Time Option (6th column)
+                let description = row.find('td:eq(7)').text().trim(); // Description (7th column)
 
-                // Populate modal fields
-                $('#packageId').val(id);
+                // Populate modal fields with extracted data
+                $('#packageId').val(id); // Hidden input for ID
                 $('#feature_type').val(feature_type); // Populate Feature Type dropdown
-                $('#title').val(title); // Populate Title input
-                $('#value').val(value); // Populate Value input
-                $('#time_limit').val(timeLimit); // Populate Time Limit input
-                $('#time_option').val(timeOption.toLowerCase()); // Populate Time Option dropdown
-                $('#description').val(description); // Populate Description textarea
+                $('#title').val(title); // Set Title input field
+                $('#value').val(value); // Set Value input field
+                $('#time_limit').val(timeLimit); // Set Time Limit input field
+                $('#time_option').val(timeOption.toLowerCase()); // Set Time Option dropdown
+                $('#description').val(description); // Set Description textarea
 
                 // Update modal title
                 $('#packageModalLabel').text('Edit Package Feature');

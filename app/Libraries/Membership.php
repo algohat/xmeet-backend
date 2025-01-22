@@ -17,8 +17,6 @@ class Membership
     public $package_time_period = null;
     public $payment_status = 1;
     public $request_input = null;
-    public $apple_response_data = null;
-    public $google_response_data = null;
 
     public function __construct($payload = null)
     {
@@ -28,8 +26,6 @@ class Membership
         $this->package_time_period  = $payload['package_time_period'] ?? null;
         $this->payment_status       = $payload['payment_status'] ?? 1;
         $this->request_input        = $payload['request_input'] ?? null;
-        $this->apple_response_data  = $payload['apple_response_data'] ?? null;
-        $this->google_response_data = $payload['google_response_data'] ?? null;
     }
 
     public function createUserDefaultPackage($user)
@@ -71,60 +67,32 @@ class Membership
         $package_end_time = null;
         $user_new_package                      = new UserPackage();
         $user_new_package->package_id          = $this->package_info->id;
-        $user_new_package->package_name        = $this->package_info->package_name;
-        $user_new_package->package_description = $this->package_info->description;
+        $user_new_package->package_name        = $this->package_info->name;
+        $user_new_package->package_type        = $this->package_info->type;
+        $user_new_package->description         = $this->package_info->description;
         $user_new_package->user_id             = $this->user->id;
         $user_new_package->user_original_id    = $this->user->id;
+        $user_new_package->user_name           = $this->user->name;
+        $user_new_package->user_phone          = $this->user->phone;
+        $user_new_package->user_email          = $this->user->email;
         $user_new_package->status              = 2;
         $user_new_package->payment_status      = $this->payment_status;
 
-        if ($this->request_input && @$this->request_input['verificationData']['source']) {
-            $user_new_package->store_name = $this->request_input['verificationData']['source'];
+        if ($this->request_input && @$this->request_input['payment_medium']) {
+            $user_new_package->payment_medium = $this->request_input['payment_medium'];
         }
-        if ($this->request_input && @$this->request_input['verificationData']['source']) {
-            $user_new_package->transaction_medium = $this->request_input['verificationData']['source'] == 'google_play' ? 'google' : 'apple';
+        if ($this->request_input && @$this->request_input['order_id']) {
+            $user_new_package->order_id = $this->request_input['order_id'];
         }
-        if ($this->request_input && @$this->request_input['purchaseID']) {
-            $user_new_package->order_id = $this->request_input['purchaseID'];
-        }
-        if ($this->request_input && @$this->request_input['purchaseID']) {
-            $user_new_package->purchase_id = $this->request_input['purchaseID'];
-        }
-        if ($this->request_input && @$this->request_input['transactionDate']) {
-            $timestampInSeconds = $this->request_input['transactionDate'] / 1000;
-            $transactionDate = date('Y-m-d H:i:s', $timestampInSeconds);
-            $user_new_package->transaction_date = $transactionDate;
-        }
-        if ($this->request_input && @$this->request_input['productID']) {
-            $user_new_package->product_id = $this->request_input['productID'];
-        }
-        if ($this->request_input && @$this->request_input['auto_renewing']) {
-            $user_new_package->auto_renewing = $this->request_input['auto_renewing'];
-        }
-        if ($this->request_input && @$this->request_input['verificationData']) {
-            $localVerificationData = $this->request_input['verificationData']['localVerificationData'] ?? null;
-
-            if ($localVerificationData) {
-                $localVerificationDataArray = json_decode($localVerificationData, true);
-                if (is_array($localVerificationDataArray)) {
-                    $user_new_package->purchase_token = $localVerificationDataArray['purchaseToken'] ?? null;;
-                }
-            }
-        }
-        if (!empty($this->apple_response_data) && $this->apple_response_data['original_transaction_id']) {
-            $user_new_package->transaction_id = $this->apple_response_data['original_transaction_id'];
+        if ($this->request_input && @$this->request_input['transaction_id']) {
+            $user_new_package->transaction_id = $this->request_input['transaction_id'];
         }
 
-        $user_new_package->start_time = Carbon::now();
-
-        if ($this->package_time_period) {
-            $user_new_package->package_time_period_id    = $this->package_time_period->id;
-            $user_new_package->package_validity          = $this->package_time_period->validity;
-            $user_new_package->package_validity_type     = $this->package_time_period->validity_type;
-            $user_new_package->price                     = $this->package_time_period->price;
-            $package_end_time = $this->getExpiredTime($this->package_time_period->validity, strtolower($this->package_time_period->validity_type));
-            $user_new_package->end_time                  = $package_end_time;
-        }
+        $user_new_package->package_validity       = $this->package_info->validity;
+        $user_new_package->package_validity_type  = $this->package_info->validity_type;
+        $user_new_package->price                  = $this->package_info->price;
+        $user_new_package->start_time             = Carbon::now();
+        $user_new_package->end_time               = $this->getExpiredTime($this->package_info->validity, strtolower($this->package_info->validity_type));
 
         //UPDATE CURRENT PACKAGE AND THEN ADD NEW PACKAGE
         UserPackage::where('user_id', Auth::id())->where('status', 2)->update(['status' => 5]);
@@ -132,22 +100,18 @@ class Membership
         $user_new_package->save();
 
         $this->user_package = $user_new_package;
-        $this->createUserPackageFeature($this->package_info->id, null);
+        $this->createUserPackageFeature($this->package_info->id);
         $this->user_package = UserPackage::where('user_id', Auth::id())->where('status', 2)->with(['userPackageFeature'])->first();
         $this->user_package = $user_new_package;
 
         return $this->user_package;
     }
 
-    public function createUserPackageFeature($package_id, $package_period_id = null)
+    public function createUserPackageFeature($package_id)
     {
         if ($package_id) {
-            if (!$package_period_id) {
-                $package_features = PackageFeature::where('package_id', $package_id)->get();
-            } else {
-                $package_features = PackageFeature::where('package_id', $package_id)->get();
-            }
 
+            $package_features = PackageFeature::where('package_id', $package_id)->get();
             if(!empty($package_features)) {
                 foreach ($package_features as $package_feature) {
                     $user_pkg_feature                       = new UserPackageFeature();

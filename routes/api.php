@@ -6,12 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\PaymentController;
 
-
-
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//    return $request->user();
-// });
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -25,24 +21,27 @@ Route::get('/set-identifier', [UserController::class, 'setIdentifier']);
 
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-Route::post('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
+    /*User*/
     Route::get('profile', [UserController::class, 'showProfile']);
     Route::post('profile', [UserController::class, 'updateProfile']);
     Route::get('user/disable', [UserController::class, 'disableAccount']);
+    Route::get('random-user', [UserController::class, 'getRandomUserByPostalCode']);
+    Route::get('all-users', [UserController::class, 'getAllUsers']);
+    Route::get('check-subscription', [UserController::class, 'checkSubscriptionStatus']);
+    Route::get('current-package', [UserController::class, 'checkCurrentPackage']);
+    Route::post('change-password', [AuthController::class, 'changePassword']);
+    Route::delete('user-delete', [UserController::class, 'deleteUser']);
 
+    /*Chat*/
     Route::post('set-message', [ChatController::class, 'setMessage']);
     Route::get('view-chat', [ChatController::class, 'viewChat']);
 
-    Route::get('random-user', [UserController::class, 'getRandomUserByPostalCode']);
-    Route::get('all-users', [UserController::class, 'getAllUsers']);
-    Route::get('users/filter', [UserController::class, 'filterUsers']);
+    /*Payment*/
+    Route::post('subscription', [PaymentController::class, 'subscribeToPackage']);
+    //callback urls
+    Route::get('success', [PaymentController::class, 'success'])->name('paypal.success');
+    Route::get('cancel', [PaymentController::class, 'cancel'])->name('paypal.cancel');
 
-    Route::get('check-subscription', [UserController::class, 'checkSubscriptionStatus']);
-    Route::post('subscription', [UserController::class, 'subscribeToPackage']);
-    Route::get('success', [UserController::class, 'success'])->name('paypal.success');
-    Route::get('cancel', [UserController::class, 'cancel'])->name('paypal.cancel');
-
-    Route::delete('user-delete', [UserController::class, 'deleteUser']);
 });

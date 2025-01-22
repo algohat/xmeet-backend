@@ -26,7 +26,7 @@ class PackageFeatureController extends Controller
         $validatedData = $request->validate([
             'package_id' => 'required|exists:packages,id',
             'feature_type' => 'required|string',
-            'title' => 'nullable|string',
+            'title' => 'nullable',
             'value' => 'nullable',
             'time_limit' => 'nullable',
             'time_option' => 'nullable|string',
@@ -50,22 +50,25 @@ class PackageFeatureController extends Controller
                         $userPackageFeature->time_option = $feature->time_option ?? null;
                         $userPackageFeature->expiration_date_time = (new Membership())->getExpiredTime($feature->time_limit, strtolower($feature->time_option));
                         $userPackageFeature->save();
-                    } catch (\Exception $exception) {
+                    } catch (\Exception $e) {
                         return response()->json([
                             'error' => 'Failed to add the feature for all UserPackages. Please try again later.',
+                            'message' => $e->getMessage(),
                         ], 500);
                     }
                 }
 
-            } catch (\Exception $exception) {
+            } catch (\Exception $e) {
                return response()->json([
                     'error' => 'Failed to add the feature for all UserPackages. Please try again later.',
+                   'message' => $e->getMessage(),
                 ], 500);
             }
             return response()->json(['success' => 'Feature added successfully.'], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to add the feature. Please try again later.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

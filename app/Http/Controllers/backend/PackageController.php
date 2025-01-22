@@ -20,6 +20,9 @@ class PackageController extends Controller
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string',
+            'tag' => 'nullable',
+            'validity' => 'nullable',
+            'validity_type' => 'nullable',
             'price' => 'nullable|numeric|min:0',
             'duration' => 'nullable|integer|min:0',
             'is_paid' => 'required|boolean',
@@ -31,6 +34,7 @@ class PackageController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to add the package. Please try again later.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -42,6 +46,9 @@ class PackageController extends Controller
             'id' => 'required|exists:packages,id',
             'name' => 'required|string|max:255',
             'type' => 'required|string',
+            'tag' => 'nullable',
+            'validity' => 'nullable',
+            'validity_type' => 'nullable',
             'price' => 'nullable|numeric|min:0',
             'duration' => 'nullable|integer|min:0',
             'is_paid' => 'required|boolean',
@@ -54,6 +61,7 @@ class PackageController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to update the package. Please try again later.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
