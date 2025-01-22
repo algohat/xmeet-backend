@@ -70,13 +70,14 @@ class UserController extends Controller
             'post_code' => 'nullable',
             'interest' => 'required',
             'gender' => 'required',
+            'design_id' => 'nullable',
             'phone' => 'required',
         ]);
 
 
         // Update user details
         $user = Auth::user();
-        $user->update($request->only('name', 'email', 'phone', 'age', 'post_code', 'interest', 'gender'));
+        $user->update($request->only('name', 'email', 'phone', 'age', 'post_code', 'interest', 'gender', 'design_id'));
 
         return response()->json([
             'message' => 'Profile updated successfully',
@@ -451,6 +452,10 @@ class UserController extends Controller
 
 
         $subscription = Subscription::findOrFail($subscriptionId);
+        $user = User::findOrFail($subscription->user_id);
+        if ($user) {
+            $user->update(['design_id' => 1]);
+        }
 
 
         $subscription->update([
