@@ -70,13 +70,14 @@ class UserController extends Controller
             'post_code' => 'nullable',
             'interest' => 'required',
             'gender' => 'required',
+            'design_id' => 'nullable',
             'phone' => 'required',
         ]);
 
 
         // Update user details
         $user = Auth::user();
-        $user->update($request->only('name', 'email', 'phone', 'age', 'post_code', 'interest', 'gender'));
+        $user->update($request->only('name', 'email', 'phone', 'age', 'post_code', 'interest', 'gender', 'design_id'));
 
         return response()->json([
             'message' => 'Profile updated successfully',
@@ -163,15 +164,15 @@ class UserController extends Controller
     {
         $query = User::query()->where('id', '!=', auth()->id())->where('is_verified', 1);
 
-        if ($request->has('gender')) {
+        if ($request->has('gender') && $request->query('gender') !== null) {
             $query->where('gender', $request->query('gender'));
         }
 
-        if ($request->has('post_code')) {
+        if ($request->has('post_code') && $request->query('post_code') !== null) {
             $query->where('post_code', $request->query('post_code'));
         }
 
-        if ($request->has('age')) {
+        if ($request->has('age') && $request->query('age') !== null) {
             $ageRange = explode('-', $request->query('age'));
             if (count($ageRange) === 2) {
                 $minAge = trim($ageRange[0]);
@@ -180,7 +181,7 @@ class UserController extends Controller
             }
         }
 
-        if ($request->has('interest')) {
+        if ($request->has('interest') && $request->query('interest') !== null) {
             $interestArray = explode(',', $request->query('interest'));
             $query->where(function ($q) use ($interestArray) {
                 foreach ($interestArray as $interest) {
@@ -451,6 +452,10 @@ class UserController extends Controller
 
 
         $subscription = Subscription::findOrFail($subscriptionId);
+        $user = User::findOrFail($subscription->user_id);
+        if ($user) {
+            $user->update(['design_id' => 1]);
+        }
 
 
         $subscription->update([
