@@ -46,6 +46,9 @@ Route::prefix('admin')->middleware('auth.admin')->group(function () {
             Route::get('/status/{id}', [PackageFeatureController::class, 'status'])->name('admin.packages.feature.status');
             Route::delete('/{id}', [PackageFeatureController::class, 'destroy'])->name('admin.packages.feature.destroy');
         });
+        Route::prefix('/sales')->group(function () {
+            Route::get('/', [PackageController::class, 'salesIndex'])->name('admin.packages.sales');
+        });
     });
 
 });

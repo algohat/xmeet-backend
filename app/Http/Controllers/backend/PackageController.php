@@ -5,6 +5,7 @@ namespace App\Http\Controllers\backend;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\PackageFeature;
+use App\Models\UserPackage;
 use Illuminate\Http\Request;
 
 class PackageController extends Controller
@@ -88,5 +89,33 @@ class PackageController extends Controller
                 'error' => 'Failed to delete the package. Please try again later.',
             ], 500);
         }
+    }
+
+    public function salesIndex()
+    {
+        $totalSales = UserPackage::where('package_id', '!=', 1)
+            ->where('payment_status', '=', 2)
+            ->sum('price');
+
+        $packageSales = UserPackage::where('package_id', '!=', 1)
+            ->with('package')
+            ->where('status', '!=', 7)
+            ->get()
+            ->groupBy('package_id')
+            ->map(function ($items) {
+                $totalSales = $items->sum('price');
+                return [
+                    'package_name' => $items->first()->package->name,
+                    'package_type' => $items->first()->package->type,
+                    'package_tag' => $items->first()->package->tag,
+                    'total_sales' => $totalSales,
+                    'validation_time' => $items->first()->package_validity.' '.$items->first()->package_validity_type,
+                    'count' => $items->count()
+                ];
+            })
+            ->values();
+        $data['totalSales'] = $totalSales ?? 0;
+        $data['packageSales'] = $packageSales ?? [];
+        return view('backend.packages.sales-index', $data);
     }
 }

@@ -1,0 +1,159 @@
+@extends('backend.layouts.index')
+@section('content')
+
+    <div class="content-body">
+        <div class="container-fluid mt-3">
+
+
+            <div class="col-lg-12">
+                <!--begin::Card-->
+                <div class="card mb-5 shadow-lg border-0">
+                    <!--begin::Card header-->
+                    <div class="card-header bg-gallery text-white">
+                        <h3 class="card-title mt-3">Sales Statistics</h3>
+                    </div>
+                    <!--end::Card header-->
+                    <!--begin::Card body-->
+                    <div class="card-body py-4">
+                        <!-- Total Earnings Section -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="alert alert-success text-center p-4 rounded shadow-sm">
+                                    <h4 class="mb-0">
+                                        <strong>Total Earnings:</strong>
+                                        ${{ number_format($totalSales, 2) }} USD
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Package Sales Details -->
+                        <div class="row">
+                            @foreach ($packageSales as $sale)
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body p-3">
+                                            <h5 class="card-title text-primary mb-3">{{ $sale['package_name'] }}</h5>
+                                            <ul class="list-unstyled mb-3">
+                                                <li><strong>Type:</strong> {{ $sale['package_type'] }}</li>
+                                                <li><strong>Tag:</strong> {{ $sale['package_tag'] }}</li>
+                                                <li><strong>Validation:</strong> {{ $sale['validation_time'] }}</li>
+                                            </ul>
+                                            <div class="text-muted">
+                                                <p class="mb-1">
+                                                    <strong>Total Sales Amount:</strong>
+                                                    ${{ number_format($sale['total_sales'], 2) }} USD
+                                                </p>
+                                                <p>
+                                                    <strong>Sales Count:</strong>
+                                                    {{ $sale['count'] }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <!--end::Card body-->
+                </div>
+                <!--end::Card-->
+            </div>
+
+
+        </div>
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            let baseUrl = `{{ url('admin/packages/feature') }}`;
+            // Add or Update Item
+            $('#saveButton').click(function () {
+                let formData = $('#packageForm').serialize();
+                let packageId = $('#packageId').val();
+                let url = packageId
+                    ? `${baseUrl}/update/${packageId}` // Update route
+                    : `${baseUrl}/store`;             // Store route
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        toastr.success('Package saved successfully.');
+                        location.reload();
+                    },
+                    error: function (response) {
+                       toastr.error('Something went wrong.');
+                    }
+                });
+            });
+
+            // Edit Item
+            $('.edit-button').click(function () {
+                let row = $(this).closest('tr'); // Get the current table row
+                let id = row.data('id'); // ID of the feature
+                let feature_type = row.find('td:eq(2)').text().trim(); // Feature Type (2nd column)
+                let title = row.find('td:eq(3)').text().trim(); // Title (3rd column)
+                let value = row.find('td:eq(4)').text().trim(); // Value (4th column)
+                let timeLimit = row.find('td:eq(5)').text().trim(); // Time Limit (5th column)
+                let timeOption = row.find('td:eq(6)').text().trim(); // Time Option (6th column)
+                let description = row.find('td:eq(7)').text().trim(); // Description (7th column)
+
+                // Populate modal fields with extracted data
+                $('#packageId').val(id); // Hidden input for ID
+                $('#feature_type').val(feature_type); // Populate Feature Type dropdown
+                $('#title').val(title); // Set Title input field
+                $('#value').val(value); // Set Value input field
+                $('#time_limit').val(timeLimit); // Set Time Limit input field
+                $('#time_option').val(timeOption.toLowerCase()); // Set Time Option dropdown
+                $('#description').val(description); // Set Description textarea
+
+                // Update modal title
+                $('#packageModalLabel').text('Edit Package Feature');
+
+                // Show the modal
+                $('#managePackageModal').modal('show');
+            });
+
+            // Delete Item
+            $('.delete-button').click(function () {
+                let row = $(this).closest('tr');
+                let id = row.data('id'); // Get the package ID
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'This will permanently delete the package feature! All users associated with this package will be affected.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `${baseUrl}/${id}`, // Use the base URL and append the package ID
+                            type: 'DELETE',
+                            success: function (response) {
+                                Swal.fire('Deleted!', response.success, 'success');
+                                row.remove(); // Remove the deleted row from the table
+                            },
+                            error: function (xhr) {
+                                let errorMessage = xhr.responseJSON?.error || 'Something went wrong.';
+                                Swal.fire('Error!', errorMessage, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+@endsection
+
+
