@@ -34,14 +34,22 @@
             </li>
 
 
-            <li class="{{ request()->is('admin/packages/list') || request()->is('admin/packages/feature/list/*') || request()->routeIs('admin.packages.sales') ? 'active' : '' }}">
-                <a class="has-arrow" href="javascript:void()" aria-expanded="{{ request()->is('admin/packages/list') || request()->is('admin/packages/feature/list/*') || request()->routeIs('admin.packages.sales') ? 'true' : 'false' }}">
+            <li class="{{
+                    request()->is('admin/packages/list') ||
+                    request()->is('admin/packages/membership-list') ||
+                    request()->is('admin/packages/feature/list/*') ||
+                    request()->routeIs('admin.packages.sales') ? 'active' : '' }}">
+                <a class="has-arrow" href="javascript:void()"
+                   aria-expanded="{{ request()->is('admin/packages/list') || request()->is('admin/packages/feature/list/*') || request()->routeIs('admin.packages.sales') ? 'true' : 'false' }}">
                     <i class="fa fa-cube menu-icon"></i>
                     <span class="nav-text">Packages</span>
                 </a>
                 <ul aria-expanded="false" class="collapse">
                     <li class="{{ request()->is('admin/packages/list') || request()->is('admin/packages/feature/list/*') ? 'active' : '' }}">
                         <a href="{{ route('admin.packages.list') }}">Package Lists</a>
+                    </li>
+                    <li class="{{ request()->is('admin/packages/membership-list') ? 'active' : '' }}">
+                        <a href="{{ route('admin.packages.membership-list') }}">Membership Lists</a>
                     </li>
                     <li class="{{ request()->routeIs('admin.packages.sales') ? 'active' : '' }}">
                         <a href="{{ route('admin.packages.sales') }}">Sales</a>

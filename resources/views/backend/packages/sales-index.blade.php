@@ -7,21 +7,22 @@
 
             <div class="col-lg-12">
                 <!--begin::Card-->
-                <div class="card mb-5 shadow-lg border-0">
+                <div class="card mb-5 shadow-lg border-0 rounded-4">
                     <!--begin::Card header-->
-                    <div class="card-header bg-gallery text-white">
-                        <h3 class="card-title mt-3">Sales Statistics</h3>
+                    <div class="card-header bg-gallery text-white py-4 rounded-top">
+                        <h3 class="card-title mb-0 text-center">Sales Statistics</h3>
                     </div>
                     <!--end::Card header-->
+
                     <!--begin::Card body-->
-                    <div class="card-body py-4">
+                    <div class="card-body py-5">
                         <!-- Total Earnings Section -->
-                        <div class="row mb-4">
+                        <div class="row mb-5">
                             <div class="col-md-12">
-                                <div class="alert alert-success text-center p-4 rounded shadow-sm">
-                                    <h4 class="mb-0">
-                                        <strong>Total Earnings:</strong>
-                                        ${{ number_format($totalSales, 2) }} USD
+                                <div class="alert alert-success text-center p-4 rounded-3 shadow-sm">
+                                    <h4 class="fw-bold mb-0">
+                                        <i class="fas fa-dollar-sign me-2"></i>
+                                        Total Earnings: ${{ number_format($totalSales, 2) }} USD
                                     </h4>
                                 </div>
                             </div>
@@ -30,17 +31,33 @@
                         <!-- Package Sales Details -->
                         <div class="row">
                             @foreach ($packageSales as $sale)
-                                <div class="col-md-4 mb-3">
-                                    <div class="card border-0 shadow-sm h-100">
-                                        <div class="card-body p-3">
-                                            <h5 class="card-title text-primary mb-3">{{ $sale['package_name'] }}</h5>
+                                <div class="col-md-4 mb-4">
+                                    <div class="card border-0 shadow-sm h-100 rounded-5">
+                                        <div class="card-body p-4">
+                                            <!-- Package Name -->
+                                            <h5 class="card-title text-primary fw-bold mb-3">
+                                                {{ $sale['package_name'] }}
+                                            </h5>
+
+                                            <!-- Package Details -->
                                             <ul class="list-unstyled mb-3">
-                                                <li><strong>Type:</strong> {{ $sale['package_type'] }}</li>
-                                                <li><strong>Tag:</strong> {{ $sale['package_tag'] }}</li>
-                                                <li><strong>Validation:</strong> {{ $sale['validation_time'] }}</li>
+                                                <li>
+                                                    <span class="text-muted">Type:</span>
+                                                    <span class="fw-medium">{{ $sale['package_type'] }}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="text-muted">Tag:</span>
+                                                    <span class="fw-medium">{{ $sale['package_tag'] }}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="text-muted">Validation:</span>
+                                                    <span class="fw-medium">{{ $sale['validation_time'] }}</span>
+                                                </li>
                                             </ul>
+
+                                            <!-- Sales Info -->
                                             <div class="text-muted">
-                                                <p class="mb-1">
+                                                <p class="mb-2">
                                                     <strong>Total Sales Amount:</strong>
                                                     ${{ number_format($sale['total_sales'], 2) }} USD
                                                 </p>

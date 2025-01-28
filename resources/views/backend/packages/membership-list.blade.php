@@ -9,95 +9,121 @@
                 <div class="card">
                     <div class="card-body">
 
-                        <div class="row  align-items-center">
-                            <div class="col-7">
-                                <strong>All Packages</strong>
+                        <!-- Filter Section -->
+                        <form action="{{ url()->current() }}" method="get" class="mb-4">
+                            <div class="row align-items-center g-3 d-flex justify-content-end">
+                                <!-- Search Input -->
+                                <div class="col-md-3">
+                                    <input type="text" name="search" value="{{ $search }}"
+                                           class="form-control form-control-solid"
+                                           placeholder="Search by keyword" />
+                                </div>
+
+                                <!-- Status Select -->
+                                <div class="col-md-3">
+                                    <select class="form-control"
+                                            name="package_id" aria-label="Filter by status">
+                                        <option value="">Select Packages</option>
+                                        @foreach($packages as $package)
+                                            <option value="{{ $package->id }}"
+                                                    {{ isset($_GET['package_id']) && $_GET['package_id'] == $package->id ? 'selected' : '' }}>
+                                                {{ $package->name }} - {{ $package->type }} - {{ $package->tag }} - {{ $package->validity }} {{ $package->validity_type }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Status Select -->
+                                <div class="col-md-3">
+                                    <select class="form-control"
+                                            name="status" aria-label="Filter by status">
+                                        <option value="">Select Status</option>
+                                        <option value="1" {{ isset($_GET['status']) && $_GET['status'] == 1 ? 'selected' : '' }}>Pending</option>
+                                        <option value="2" {{ isset($_GET['status']) && $_GET['status'] == 2 ? 'selected' : '' }}>Active</option>
+                                        <option value="3" {{ isset($_GET['status']) && $_GET['status'] == 3 ? 'selected' : '' }}>Expired</option>
+                                        <option value="4" {{ isset($_GET['status']) && $_GET['status'] == 4 ? 'selected' : '' }}>Cancelled</option>
+                                        <option value="5" {{ isset($_GET['status']) && $_GET['status'] == 5 ? 'selected' : '' }}>Inactive</option>
+                                        <option value="6" {{ isset($_GET['status']) && $_GET['status'] == 6 ? 'selected' : '' }}>Renewal</option>
+                                    </select>
+                                </div>
+
+                                <!-- Buttons -->
+                                <div class="col-md-3 text-md-end">
+                                    <button type="submit" class="btn btn-outline-info me-2">Apply</button>
+                                    <a href="{{ url()->current() }}" class="btn btn-outline-danger">
+                                        Reset
+                                    </a>
+                                </div>
                             </div>
+                        </form>
 
-                            <div class="col-5">
-                                <button class="btn btn-primary float-right" data-toggle="modal"
-                                        data-target="#managePackageModal"><i class="icon-plus"></i> Add Package
-                                </button>
-
-
-                            </div>
-                        </div>
-
-
+                        <!-- Table -->
                         <table class="table table-bordered zero-configuration">
                             <thead>
                             <tr class="bg-primary text-white">
-                                <th>PID.</th>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Tag</th>
-                                <th>Validity</th>
-                                <th>Price & Duration</th>
-                                <th>Feature</th>
-                                <th>Is Paid</th>
+                                <th>PID</th>
+                                <th>User Info</th>
+                                <th>Package Info</th>
+                                <th>Price</th>
+                                <th>Medium</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                             </thead>
-                            <tbody id="packageTable">
-                            @foreach($packages as $key=>$package)
-                                <tr data-id="{{ $package->id }}">
-                                    <td>{{ $package->id }}</td>
-                                    <td>{{ $package->name }}</td>
-                                    <td>{{ $package->type }}</td>
+                            <tbody class="text-gray-600 fw-semibold">
+                            @foreach($items as $item)
+                                <tr>
+                                    <td>{{ $item->id }}</td>
                                     <td>
-                                        @php
-                                        if ($package->tag == 'Base') {
-                                            echo '<span class="text-secondary">Base</span>';
-                                        } elseif ($package->tag == 'Gold') {
-                                            echo '<span class="text-warning">Gold</span>';
-                                        } elseif ($package->tag == 'Platinum') {
-                                            echo '<span class="text-success">Platinum</span>';
-                                        } else {
-                                            echo '<span class="text-secondary">'.$package->tag.'</span>';
-                                        }
-                                        @endphp
-                                    </td>
-                                    <td>{{ @$package->validity." ".@$package->validity_type }}</td>
-                                    <td>
-                                        Price: {{ $package->price }};
-                                        Duration: {{ $package->duration }}
-                                    </td>
-                                    <td>
-                                        <a href="{{route('admin.packages.feature.list', $package->id)}}" class="btn btn-sm btn-twitter" title="Features">
-                                            <i class="fa fa-external-link"></i> View Features
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <span class="btn btn-sm {{ $package->is_paid == 1 ? 'btn-outline-success' : 'btn-outline-danger' }}">
-                                            {{ $package->is_paid == 1 ? 'YES' : 'NO' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @if($package->id != 1)
-                                            <div class="form-check form-switch form-check-custom form-check-solid me-10">
-                                                <input class="form-check-input h-20px w-30px" type="checkbox" value="" id="flexSwitch20x30 welcome_status_{{$package->id}}" {{$package?($package->status==1?'checked':''):''}}
-                                                onclick="location.href='{{route('admin.packages.status',[$package->id])}}'"> <span>{{ $package->status == 1 ? 'Active' : 'Inactive'}}</span>
+                                        @if(!empty($item->user))
+                                            <div class="d-flex flex-column">
+                                                <a href="#" class="text-gray-800 text-hover-primary mb-1">
+                                                    {{ $item->user->name }}
+                                                </a>
+                                                <span>{{ $item->user->email ?? 'N/A' }}</span>
+                                                <span>{{ $item->user->phone }}</span>
+                                                <span class="text-muted">UID: {{ $item->user->id }}</span>
                                             </div>
                                         @else
-                                           Active
+                                            <span class="badge bg-danger">N/A</span>
                                         @endif
                                     </td>
-
                                     <td>
-                                        <button class="btn btn-sm btn-info edit-button" data-toggle="modal" title="Edit"
-                                                data-target="#managePackageModal"><i class="fa fa-pencil-square-o"></i>
-                                        </button>
-                                        @if($package->id != 1)
-                                        <button class="btn btn-sm btn-danger delete-button" title="Delete" data-id="{{ $package->id }}">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                        @endif
+                                        Name: {{ $item->package->name }} <br />
+                                        Validity: {{ $item->package->validity . ' ' . $item->package->validity_type }} <br />
+                                        Type: {{ $item->package->type }}; Tag: {{ $item->package->tag ?? 'N/A' }}
+                                    </td>
+                                    <td>${{ $item->price ?? 'N/A' }} USD</td>
+                                    <td>{{ strtoupper($item->payment_medium) ?? 'N/A' }}</td>
+                                    <td>
+                                        {{ \Carbon\Carbon::parse($item->start_time)->format('d F Y') }}<br>
+                                        {{ \Carbon\Carbon::parse($item->start_time)->format('H:i:s') }}
+                                    </td>
+                                    <td>
+                                        {{ \Carbon\Carbon::parse($item->end_time)->format('d F Y') }}<br>
+                                        {{ \Carbon\Carbon::parse($item->end_time)->format('H:i:s') }}
+                                    </td>
+                                    <td>
+                                        @switch($item->status)
+                                            @case(1) <span class="text-info">Pending</span> @break
+                                            @case(2) <span class="text-success">Active</span> @break
+                                            @case(3) <span class="text-danger">Expired</span> @break
+                                            @case(4) <span class="text-warning">Cancelled</span> @break
+                                            @case(5) <span class="text-secondary">Inactive</span> @break
+                                            @case(6) <span class="text-primary">Renewed</span> @break
+                                            @default <span class="text-secondary">No Status</span>
+                                        @endswitch
                                     </td>
                                 </tr>
                             @endforeach
                             </tbody>
                         </table>
+
+                        <!-- Pagination -->
+                        <div class="mt-4 d-flex justify-content-center">
+                            {!! $items->links() !!}
+                        </div>
                     </div>
 
                     <!-- Modal -->
@@ -159,7 +185,7 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="duration">Duration in total days (Optional)</label>
+                                            <label for="duration">Duration (Total days)</label>
                                             <input type="number" class="form-control" id="duration" name="duration">
                                         </div>
 

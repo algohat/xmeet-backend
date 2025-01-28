@@ -39,6 +39,7 @@ Route::prefix('admin')->middleware('auth.admin')->group(function () {
         Route::post('/update/{id}', [PackageController::class, 'update'])->name('admin.packages.update');
         Route::get('/status/{id}', [PackageController::class, 'status'])->name('admin.packages.status');
         Route::delete('/{id}', [PackageController::class, 'destroy'])->name('admin.packages.destroy');
+        Route::get('/membership-list', [PackageController::class, 'memberShipList'])->name('admin.packages.membership-list');
         Route::prefix('/feature')->group(function () {
             Route::get('/list/{id}', [PackageFeatureController::class, 'list'])->name('admin.packages.feature.list');
             Route::post('/store', [PackageFeatureController::class, 'store'])->name('admin.packages.feature.store');

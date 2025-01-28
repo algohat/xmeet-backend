@@ -91,6 +91,54 @@ class PackageController extends Controller
         }
     }
 
+    public function memberShipList(Request $request)
+    {
+        $query_param = [];
+        $search = $request['search'];
+        $status = $request->input('status');
+        $package_id = $request->input('package_id');
+        if ($request->has('search')) {
+            $key = explode(' ', $request['search']);
+            $items = UserPackage::where(function ($q) use ($key) {
+                foreach ($key as $value) {
+                    $q->orWhereHas('user', function ($q) use ($value) {
+                        $q->where('name', 'like', "%{$value}%")
+                            ->orWhere('phone', 'like', "%{$value}%")
+                            ->orWhere('id', 'like', "%{$value}%")
+                            ->orWhere('email', 'like', "%{$value}%");
+                    });
+                }
+            });
+            $query_param = ['search' => $request['search']];
+        } else {
+            $items = new UserPackage();
+        }
+
+        // package filter
+        if ($request->has('package_id') && $package_id) {
+            $items->where('package_id', $package_id);
+            $query_param['package_id'] = $package_id;
+        }
+        // Status filter
+        if ($request->has('status') && $status) {
+            $items->where('status', $status);
+            $query_param['status'] = $status;
+        }
+
+        $items = $items->where('package_id', '!=', 1)
+            ->with(['package', 'userPackageFeature'])
+            ->latest()
+            ->paginate(10)
+            ->appends($query_param);
+
+        $packages = Package::where('id', '!=', 1)->get();
+
+        $data['items'] = $items;
+        $data['search'] = $search;
+        $data['packages'] = $packages;
+        return view('backend.packages.membership-list', $data);
+    }
+
     public function salesIndex()
     {
         $totalSales = UserPackage::where('package_id', '!=', 1)
