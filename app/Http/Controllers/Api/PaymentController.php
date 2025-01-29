@@ -87,6 +87,9 @@ class PaymentController extends Controller
                 'message' => 'Subscription not found',
             ], 404);
         }
+        if ($subscription->status === 'active') {
+            return view('payment.success');
+        }
 
         // Update user design id
         $user = User::findOrFail($subscription->user_id);
@@ -123,12 +126,7 @@ class PaymentController extends Controller
             Log::error('Failed to dispatch ManagePaidMembershipJob', ['error' => $e->getMessage()]);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Payment completed successfully.',
-            'order_id' => $orderId,
-            'subscription_id' => $subscriptionId,
-        ]);
+        return view('payment.success');
     }
 
     public function cancel(Request $request)
@@ -140,10 +138,7 @@ class PaymentController extends Controller
             $subscription->update(['status' => 'canceled']);
         }
 
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Payment was canceled.',
-        ]);
+        return view('payment.cancel');
     }
 
 }

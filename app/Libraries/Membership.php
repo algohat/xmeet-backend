@@ -95,13 +95,13 @@ class Membership
         $user_new_package->end_time               = $this->getExpiredTime($this->package_info->validity, strtolower($this->package_info->validity_type));
 
         //UPDATE CURRENT PACKAGE AND THEN ADD NEW PACKAGE
-        UserPackage::where('user_id', Auth::id())->where('status', 2)->update(['status' => 5]);
+        UserPackage::where('user_id', $this->user->id)->where('status', 2)->update(['status' => 5]);
 
         $user_new_package->save();
 
         $this->user_package = $user_new_package;
         $this->createUserPackageFeature($this->package_info->id);
-        $this->user_package = UserPackage::where('user_id', Auth::id())->where('status', 2)->with(['userPackageFeature'])->first();
+        $this->user_package = UserPackage::where('user_id', $this->user->id)->where('status', 2)->with(['userPackageFeature'])->first();
         $this->user_package = $user_new_package;
 
         return $this->user_package;

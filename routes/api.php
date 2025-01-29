@@ -40,8 +40,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*Payment*/
     Route::post('subscription', [PaymentController::class, 'subscribeToPackage']);
-    //callback urls
-    Route::get('success', [PaymentController::class, 'success'])->name('paypal.success');
-    Route::get('cancel', [PaymentController::class, 'cancel'])->name('paypal.cancel');
 
 });
+
+//callback urls
+Route::get('success', [PaymentController::class, 'success'])->name('paypal.success');
+Route::get('cancel', [PaymentController::class, 'cancel'])->name('paypal.cancel');
