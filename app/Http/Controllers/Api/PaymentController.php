@@ -58,6 +58,7 @@ class PaymentController extends Controller
         if (isset($response['id']) && $response['id'] != null) {
             foreach ($response['links'] as $link) {
                 if ($link['rel'] === 'approve') {
+                    $subscription->update(['order_id' => $response['id']]);
                     return response()->json([
                         'status' => 'success',
                         'approval_link' => $link['href'],
@@ -80,7 +81,7 @@ class PaymentController extends Controller
         $subscriptionId = $request->query('subscription_id');
 
 
-        $subscription = Subscription::findOrFail($subscriptionId);
+        $subscription = Subscription::where('id', $subscriptionId)->where('order_id', $orderId)->first();
         if(!$subscription) {
             return response()->json([
                 'status' => 'error',
