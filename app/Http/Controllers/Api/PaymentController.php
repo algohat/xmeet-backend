@@ -87,15 +87,20 @@ class PaymentController extends Controller
                 'message' => 'Subscription not found',
             ], 404);
         }
+        $user = User::findOrFail($subscription->user_id);
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found',
+            ], 404);
+        }
+
         if ($subscription->status === 'active') {
             return view('payment.success');
         }
 
         // Update user design id
-        $user = User::findOrFail($subscription->user_id);
-        if ($user) {
-            $user->update(['design_id' => 1]);
-        }
+        $user->update(['design_id' => 1]);
         $package = Package::find($subscription->package_id);
         $package_end_time = (new Membership())->getExpiredTime($package->validity, strtolower($package->validity_type));
 
