@@ -5,6 +5,7 @@ namespace App\Http\Controllers\backend;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\PackageFeature;
+use App\Models\Subscription;
 use App\Models\UserPackage;
 use Illuminate\Http\Request;
 
@@ -130,6 +131,14 @@ class PackageController extends Controller
             ->latest()
             ->paginate(10)
             ->appends($query_param);
+
+        // Fetch invoice paths
+        foreach ($items as $item) {
+            $subscription = Subscription::where('user_id', $item->user_id)
+                ->where('package_id', $item->package_id)
+                ->first();
+            $item->invoice_path = $subscription ? $subscription->invoice_path : null;
+        }
 
         $packages = Package::where('id', '!=', 1)->get();
 

@@ -8,8 +8,11 @@ use App\Libraries\Membership;
 use App\Models\Package;
 use App\Models\Subscription;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
 class PaymentController extends Controller
@@ -96,6 +99,7 @@ class PaymentController extends Controller
             ], 404);
         }
 
+
         if ($subscription->status === 'active') {
             return view('payment.success');
         }
@@ -113,7 +117,7 @@ class PaymentController extends Controller
         ]);
 
         // Create user package
-        $subscription = new Membership([
+        $membership = new Membership([
             'user' => $user,
             'package_info' => $package,
             'request_input' => [
@@ -124,7 +128,7 @@ class PaymentController extends Controller
             ],
             'payment_status' => 2,
         ]);
-        $subscription->createUserPackage();
+        $membership->createUserPackage();
         // SETUP JOB FOR SUBSCRIPTION STATUS CHECK
         try {
             ManagePaidMembershipJob::dispatch(["user" => $user])->delay($package_end_time);
@@ -132,6 +136,37 @@ class PaymentController extends Controller
             Log::error('Failed to dispatch ManagePaidMembershipJob', ['error' => $e->getMessage()]);
         }
 
+        // Generate PDF Invoice
+        $invoiceData = [
+            'user' => $user,
+            'subscription' => $subscription,
+            'package' => $package,
+            'start_time' => now()->format('Y-m-d H:i'),
+            'end_time' => $package_end_time->format('Y-m-d H:i'),
+            'payment_method' => 'PayPal',
+            'transaction_id' => $request->query('token'),
+            'date' => now()->format('Y-m-d'),
+        ];
+
+        $pdf = Pdf::loadView('backend.packages.invoice', $invoiceData);
+        $fileName = 'invoice_' . $subscription->id . '.pdf';
+        $filePath = 'invoices/' . $fileName;
+
+        // Store the PDF
+        Storage::put('public/' . $filePath, $pdf->output());
+
+        // Save PDF path in database for admin panel
+        $subscription->update(['invoice_path' => $filePath]);
+
+        // Send Invoice via Email
+        Mail::send('emails.invoice', $invoiceData, function ($message) use ($user, $filePath, $fileName) {
+            $message->to($user->email)
+                ->subject('Package purchase invoice')
+                ->attach(storage_path('app/public/' . $filePath), [
+                    'as' => $fileName,
+                    'mime' => 'application/pdf',
+                ]);
+        });
         return view('payment.success');
     }
 

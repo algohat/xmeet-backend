@@ -73,7 +73,7 @@
     <div class="footer">
         <p>Regards,</p>
         <p><strong>Xmeet Team</strong></p>
-        <p>If you have any questions, feel free to <a href="#">contact us</a>.</p>
+        <p>If you have any questions, feel free to <a href="https://xmeet.algohat.com">contact us</a>.</p>
     </div>
 </div>
 

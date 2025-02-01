@@ -43,6 +43,11 @@ class UserController extends Controller
             ->where('receiver_id', auth()->id())
             ->count();
 
+        // Hide phone if the user is verified
+        if ($user->is_verified == 1) {
+            $user->makeHidden('phone');
+        }
+
         return response()->json([
             'total_chat_open' => $chatOpenCounter,
             'total_message_send' => $MessageSendCount,
@@ -131,7 +136,7 @@ class UserController extends Controller
         }
 
         if ($request->has('post_code') && $request->query('post_code') !== null) {
-            $query->where('post_code', $request->query('post_code'));
+            $query->where('post_code', 'LIKE', $request->query('post_code') . '%');
         }
 
         if ($request->has('age') && $request->query('age') !== null) {

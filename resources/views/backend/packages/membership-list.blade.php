@@ -68,7 +68,8 @@
                                 <th>Medium</th>
                                 <th>Start Time</th>
                                 <th>End Time</th>
-                                <th>Status</th>
+                                <th>Status1</th>
+                                <th>Invoice</th>
                             </tr>
                             </thead>
                             <tbody class="text-gray-600 fw-semibold">
@@ -114,6 +115,15 @@
                                             @case(6) <span class="text-primary">Renewed</span> @break
                                             @default <span class="text-secondary">No Status</span>
                                         @endswitch
+                                    </td>
+                                    <td>
+                                        @if(!empty($item->invoice_path))
+                                            <a href="{{ asset('storage/'.$item->invoice_path) }}" download>
+                                                <i class="fa fa-download"></i> Download
+                                            </a>
+                                        @else
+                                            <span class="text-muted">N/A</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
