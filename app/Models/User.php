@@ -83,6 +83,15 @@ class User extends Authenticatable
             ->orWhere('chat_opens.receiver_id', $this->id);
     }
 
+    public function blockedUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_blocks', 'reporter_id', 'user_id')
+            ->withTimestamps();
+    }
 
-
+    public function blockedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_blocks', 'user_id', 'reporter_id')
+            ->withTimestamps();
+    }
 }

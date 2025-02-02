@@ -57,6 +57,19 @@ class UserController extends Controller
         ], 200);
     }
 
+    public function userDetails($identifier)
+    {
+        $user = User::where('identifier', $identifier)->first();
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->makeHidden('phone');
+        $user->is_blocked = auth()->user()->blockedUsers->contains($user->id) ? 1 : 0;
+
+        return response()->json(['user' => $user], 200);
+    }
+
     public function disableAccount(Request $request)
     {
         $request->validate([
@@ -79,7 +92,7 @@ class UserController extends Controller
             'interest' => 'required',
             'gender' => 'required',
             'design_id' => 'nullable',
-            'phone' => 'required',
+            'phone' => 'nullable',
         ]);
 
 
@@ -190,6 +203,7 @@ class UserController extends Controller
             $user->message_received_count = DB::table('chat_opens')
                 ->where('receiver_id', $user->id)
                 ->count();
+            $user->is_blocked = auth()->user()->blockedUsers->contains($user->id) ? 1 : 0;
             return $user;
         });
 

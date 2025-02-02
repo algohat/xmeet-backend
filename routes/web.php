@@ -54,6 +54,9 @@ Route::prefix('admin')->middleware('auth.admin')->group(function () {
 
 });
 
+//user block
+Route::get('block-confirm/{sender_identifier}/{receiver_identifier}', [UserlistController::class, 'blockConfirm'])->name('block.confirm');
+Route::post('user-block/{sender_identifier}/{receiver_identifier}', [UserlistController::class, 'userBlock'])->name('user.block');
 
 require __DIR__.'/auth.php';
 

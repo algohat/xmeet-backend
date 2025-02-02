@@ -79,6 +79,7 @@ class ChatController extends Controller
             try {
                 Mail::send('emails.chat_open_notification', [
                     'sender' => $sender,
+                    'receiver' => $receiverIdCheck,
                     'chat_text' => $request->message,
                 ], function ($message) use ($adminEmail, $subject) {
                     $message->to($adminEmail)
@@ -92,6 +93,7 @@ class ChatController extends Controller
             try {
                 Mail::send('emails.chat_open_notification', [
                     'sender' => $sender,
+                    'receiver' => $receiverIdCheck,
                     'chat_text' => $request->message,
                 ], function ($message) use ($receiverIdCheck, $subject) {
                     $message->to($receiverIdCheck->email)

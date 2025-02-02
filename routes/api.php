@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 Route::middleware('auth:sanctum')->group(function () {
     /*User*/
     Route::get('profile', [UserController::class, 'showProfile']);
+    Route::get('user-details/{identifier}', [UserController::class, 'userDetails']);
     Route::post('profile', [UserController::class, 'updateProfile']);
     Route::get('user/disable', [UserController::class, 'disableAccount']);
     Route::get('random-user', [UserController::class, 'getRandomUserByPostalCode']);
