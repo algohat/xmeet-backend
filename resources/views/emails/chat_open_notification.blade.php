@@ -54,7 +54,7 @@
         </a>
 
         <!-- Kontakt Button -->
-        <a href="#"
+        <a href="https://xmeet.algohat.com/contact"
            style="display: inline-block; padding: 5px 10px; background-color: #007bff; color: #fff; text-decoration: none;
               font-weight: bold; border-radius: 3px; text-align: center; font-size: 14px; border: 1px solid #007bff;"
            onmouseover="this.style.backgroundColor='#fff'; this.style.color='#007bff';"

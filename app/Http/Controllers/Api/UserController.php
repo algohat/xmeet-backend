@@ -142,7 +142,7 @@ class UserController extends Controller
 
     public function getAllUsers(Request $request)
     {
-        $query = User::query()->where('id', '!=', auth()->id())->where('is_verified', 1);
+        $query = User::query()->where('id', '!=', auth()->id())->where('is_verified', 1)->where('is_disable', 0);
 
         if ($request->has('gender') && $request->query('gender') !== null) {
             $query->where('gender', $request->query('gender'));
