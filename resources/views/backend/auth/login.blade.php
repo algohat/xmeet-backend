@@ -1,10 +1,11 @@
-
 <html>
 <head>
     <meta charset="utf-8">
     <title>Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
@@ -21,10 +22,20 @@
                 <div class="formbg" style="border-top: 3px solid #16a085;">
                     <br>
                     <center><h1><a href="" rel="dofollow" style="color: #16a085;">Login Admin</a></h1></center>
-                    <div class="formbg-inner padding-horizontal--48" >
+                    <div class="formbg-inner padding-horizontal--48">
 
+                        <!-- Display Toastr Notifications -->
+                        @if ($errors->any())
+                            <script type="text/javascript">
+                                $(document).ready(function () {
+                                    @foreach ($errors->all() as $error)
+                                    toastr.error('{{ $error }}');
+                                    @endforeach
+                                });
+                            </script>
+                        @endif
 
-                        <form id="stripe-login"  method="POST" action="{{ route('admin.login') }}">
+                        <form id="stripe-login" method="POST" action="{{ route('admin.login') }}">
                             @csrf
 
                             <div class="field padding-bottom--24">
@@ -35,11 +46,12 @@
                                 <div class="grid--50-50">
                                     <label for="password">Password:</label>
                                 </div>
-                                <input type="password" name="password"  id="password" required="" autocomplete="off">
+                                <input type="password" name="password" id="password" required="" autocomplete="off">
                             </div>
 
                             <div class="field padding-bottom--24">
-                                <input type="submit" name="submit" id="submit" onclick="return submitconfirm()" value="Login Here">
+                                <input type="submit" name="submit" id="submit" onclick="return submitconfirm()"
+                                       value="Login Here">
                                 <input type="submit" name="submit" id="loading" disabled="" value="Loading...">
                             </div>
 
@@ -52,6 +64,15 @@
     </div>
 </div>
 
+<!-- Toastr Script -->
+<script type="text/javascript">
+    // Customize Toastr notification settings (Optional)
+    toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "timeOut": "5000",  // 5 seconds
+    };
+</script>
 
 <style type="text/css">
     * {
@@ -60,19 +81,23 @@
         color: #1a1f36;
         box-sizing: border-box;
         word-wrap: break-word;
-        font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Ubuntu,sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Ubuntu, sans-serif;
     }
+
     body {
         min-height: 100%;
         background-color: #ffffff;
     }
+
     h1 {
         letter-spacing: -1px;
     }
+
     a {
         color: #5469d4;
         text-decoration: unset;
     }
+
     .login-root {
         background: #fff;
         display: flex;
@@ -80,6 +105,7 @@
         min-height: 100vh;
         overflow: hidden;
     }
+
     .loginbackground {
         min-height: 692px;
         position: fixed;
@@ -90,67 +116,85 @@
         z-index: 0;
         overflow: hidden;
     }
+
     .flex-flex {
         display: flex;
     }
+
     .align-center {
         align-items: center;
     }
+
     .center-center {
         align-items: center;
         justify-content: center;
     }
+
     .box-root {
         box-sizing: border-box;
     }
+
     .flex-direction--column {
         -ms-flex-direction: column;
         flex-direction: column;
     }
+
     .loginbackground-gridContainer {
         display: -ms-grid;
         display: grid;
-        -ms-grid-columns: [start] 1fr [left-gutter] (86.6px)[16] [left-gutter] 1fr [end];
-        grid-template-columns: [start] 1fr [left-gutter] repeat(16,86.6px) [left-gutter] 1fr [end];
-        -ms-grid-rows: [top] 1fr [top-gutter] (64px)[8] [bottom-gutter] 1fr [bottom];
-        grid-template-rows: [top] 1fr [top-gutter] repeat(8,64px) [bottom-gutter] 1fr [bottom];
+        -ms-grid-columns: [start] 1fr [left-gutter] (86.6px) [ 16 ] [ left-gutter ] 1 fr [ end ];
+        grid-template-columns: [start] 1fr [left-gutter] repeat(16, 86.6px) [left-gutter] 1fr [end];
+        -ms-grid-rows: [top] 1fr [top-gutter] (64px) [ 8 ] [ bottom-gutter ] 1 fr [ bottom ];
+        grid-template-rows: [top] 1fr [top-gutter] repeat(8, 64px) [bottom-gutter] 1fr [bottom];
         justify-content: center;
         margin: 0 -2%;
         transform: rotate(-12deg) skew(-12deg);
     }
+
     .box-divider--light-all-2 {
         box-shadow: inset 0 0 0 2px #e3e8ee;
     }
+
     .box-background--blue {
         background-color: #5469d4;
     }
+
     .box-background--white {
         background-color: #ffffff;
     }
+
     .box-background--blue800 {
         background-color: #212d63;
     }
+
     .box-background--gray100 {
         background-color: #e3e8ee;
     }
+
     .box-background--cyan200 {
         background-color: #7fd3ed;
     }
+
     .padding-top--64 {
         padding-top: 64px;
     }
+
     .padding-top--24 {
         padding-top: 24px;
     }
+
     .padding-top--48 {
         padding-top: 48px;
     }
+
     .padding-bottom--24 {
         padding-bottom: 24px;
     }
+
     .padding-horizontal--48 {
         padding: 48px;
     }
+
     .padding-bottom--15 {
         padding-bottom: 15px;
     }
@@ -169,24 +213,29 @@
         border-radius: 4px;
         box-shadow: rgba(60, 66, 87, 0.12) 0px 7px 14px 0px, rgba(0, 0, 0, 0.12) 0px 3px 6px 0px;
     }
+
     span {
         display: block;
         font-size: 20px;
         line-height: 28px;
         color: #1a1f36;
     }
+
     label {
         margin-bottom: 10px;
     }
-    .reset-pass a,label {
+
+    .reset-pass a, label {
         font-size: 14px;
         font-weight: 600;
         display: block;
     }
+
     .reset-pass > a {
         text-align: right;
         margin-bottom: 10px;
     }
+
     .grid--50-50 {
         display: grid;
         grid-template-columns: 50% 50%;
@@ -218,8 +267,9 @@
         color: #fff;
         font-weight: 600;
         cursor: pointer;
-        border: 0!important;
+        border: 0 !important;
     }
+
     .field-checkbox input {
         width: 20px;
         height: 15px;
@@ -227,20 +277,24 @@
         box-shadow: unset;
         min-height: unset;
     }
+
     .field-checkbox label {
         display: flex;
         align-items: center;
         margin: 0;
     }
+
     a.ssolink {
         display: block;
         text-align: center;
         font-weight: 600;
     }
+
     .footer-link span {
         font-size: 14px;
         text-align: center;
     }
+
     .listing a {
         color: #697386;
         font-weight: 600;
@@ -250,12 +304,15 @@
     .animationRightLeft {
         animation: animationRightLeft 2s ease-in-out infinite;
     }
+
     .animationLeftRight {
         animation: animationLeftRight 2s ease-in-out infinite;
     }
+
     .tans3s {
         animation: animationLeftRight 3s ease-in-out infinite;
     }
+
     .tans4s {
         animation: animationLeftRight 4s ease-in-out infinite;
     }
@@ -268,37 +325,20 @@
 
     $("#loading").hide();
 
-    function submitconfirm(){
-
-        var email    = $("#email").val();
+    function submitconfirm() {
+        var email = $("#email").val();
         var password = $("#password").val();
-
-
         if (email == "" && password == "") {
             alert("Please Enter Email and Password")
-        }else{
-
+        } else {
             $("#submit").hide();
             $("#loading").show();
-
-
         }
-
-
-
-
     }
-
 </script>
-
-
-
-
-
-
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 </body>
-
 </html>
 
 

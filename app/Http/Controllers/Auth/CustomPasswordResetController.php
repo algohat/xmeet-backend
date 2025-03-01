@@ -31,9 +31,14 @@ class CustomPasswordResetController extends Controller
         if (!$reset) {
             return response()->json(['message' => 'Invalid or expired token.'], 400);
         }
+        $loginAttemptLimit = config('app.login_attempt_limit');
 
         $user = User::where('email', $request->email)->first();
         $user->password = Hash::make($request->password);
+        if((int)$user->login_attempt >= (int)$loginAttemptLimit){
+            $user->login_attempt = 0;
+            $user->is_disable = 0;
+        }
         $user->save();
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();

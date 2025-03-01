@@ -33,6 +33,7 @@ class User extends Authenticatable
         'otp_verified_at',
         'last_login_at',
         'is_disable',
+        'login_attempt',
     ];
 
     /**

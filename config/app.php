@@ -59,6 +59,8 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
+    'login_attempt_limit' => env('LOGIN_ATTEMPT_LIMIT', 6),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

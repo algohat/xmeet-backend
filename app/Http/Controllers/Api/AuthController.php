@@ -271,22 +271,50 @@ class AuthController extends Controller
         ]);
 
         $user = User::with('userPackage')->where('email', $request->email)->first();
-        $subscription = Subscription::where('user_id', $user->id)->where('status', 'active')->latest()->first();
 
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             throw ValidationException::withMessages([
-                'email' => ['The email or password incorrect.'],
+                'email' => ['Email is not valid.']
             ]);
         }
 
+        $loginAttemptLimit = config('app.login_attempt_limit');
+
+        if ((int)$user->login_attempt >= (int)$loginAttemptLimit) {
+            return response()->json([
+                'message' => 'Your account has been disabled due to multiple failed login attempts. Please reset your password.',
+                'login_attempt_message' => 'Password locked',
+                'login_attempt' => $user->login_attempt,
+                'is_disable' => $user->is_disable
+            ], 403);
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            $user->increment('login_attempt');
+
+            if ((int)$user->login_attempt >= (int)$loginAttemptLimit) {
+                $user->update(['is_disable' => 1]);
+            }
+
+            return response()->json([
+                'message' => 'Password is incorrect.',
+                'login_attempt' => $user->login_attempt,
+                'is_disable' => $user->is_disable
+            ], 401);
+        }
+
+        $user->update(['login_attempt' => 0]);
+
         $token = $user->createToken('auth_token')->plainTextToken;
+        $subscription = Subscription::where('user_id', $user->id)->where('status', 'active')->latest()->first();
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
-            'subscription' => $subscription
+            'subscription' => $subscription,
+            'login_attempt' => $user->login_attempt,
+            'is_disable' => $user->is_disable
         ]);
     }
 
