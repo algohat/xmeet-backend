@@ -82,7 +82,7 @@
                style="text-decoration: none; color: #007bff; font-weight: bold; transition: color 0.3s;">
                 Impressum
             </a>
-            <a href="https://xmeet.algohat.com/contact"
+            <a href="https://xmeet.algohat.com#contact"
                style="text-decoration: none; color: #007bff; font-weight: bold; transition: color 0.3s;">
                 Kontakt
             </a>
