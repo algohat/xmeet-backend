@@ -68,7 +68,7 @@
                                 <th>Medium</th>
                                 <th>Start Time</th>
                                 <th>End Time</th>
-                                <th>Status1</th>
+                                <th>Status</th>
                                 <th>Invoice</th>
                             </tr>
                             </thead>
@@ -115,6 +115,9 @@
                                             @case(6) <span class="text-primary">Renewed</span> @break
                                             @default <span class="text-secondary">No Status</span>
                                         @endswitch
+                                        @if($item->self_cancel === 1)
+                                                <br/><span class="text-muted"><small>(Self Cancelled)</small></span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if(!empty($item->invoice_path))

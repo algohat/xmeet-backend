@@ -14,7 +14,7 @@ class UserPackage extends Model
     protected $fillable = [
         'user_id', 'package_name', 'package_type', 'start_date',
         'end_date', 'payment_medium', 'transaction_id',
-        'user_original_id', 'user_name', 'user_email', 'user_phone'
+        'user_original_id', 'user_name', 'user_email', 'user_phone', 'self_cancel'
     ];
 
     public function user(): HasOne

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Libraries\Membership;
+use App\Models\Subscription;
 use App\Models\UserPackage;
 use App\Models\UserPackageFeature;
 use Carbon\Carbon;
@@ -58,6 +59,12 @@ class ManagePaidMembershipJob implements ShouldQueue
                     $payload = ['user' => $this->user];
                     $membership = new Membership($payload);
                     $membership->updateDefaultSubscriptionStatus(2);
+
+                    //set expire in subscriptions table
+                    $subscription = Subscription::where('user_id', $this->user->id)->where('status', 'active')->whereNot('package_id', 1)->first();
+                    if ($subscription) {
+                        $subscription->update(['status' => 'expired']);
+                    }
 
                 }
             } else {

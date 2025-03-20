@@ -112,6 +112,7 @@ class UserController extends Controller
 
         $subscription = Subscription::where('user_id', $userId)
             ->where('end_date', '>', Carbon::now())
+            ->where('status', 'active')
             ->first();
 
         if ($subscription) {
@@ -131,13 +132,41 @@ class UserController extends Controller
 
         $subscription = Subscription::where('user_id', $userId)
             ->where('end_date', '>=', Carbon::now())
+            ->where('status', 'active')
             ->get();
 
         if ($current_package) {
-            return response()->json(['status' => 'active', 'package' => $current_package, 'subscription' => $subscription], 200);
+            return response()->json(['status' => 'current package', 'package' => $current_package, 'subscription' => $subscription], 200);
         } else {
             return response()->json(['status' => 'expired'], 200);
         }
+    }
+
+    public function cancelSubscription()
+    {
+        $userId = auth()->id();
+
+        $current_package = UserPackage::with('userPackageFeature')->where('user_id', $userId)
+            ->where('status', 2)
+            ->first();
+
+        if (!$current_package) {
+            return response()->json(['message' => 'No active subscription found.'], 404);
+        }
+
+        $subscription = Subscription::where('user_id', $userId)
+            ->where('end_date', '>=', Carbon::now())
+            ->where('status', 'active')
+            ->first();
+
+        if($current_package->package_id === 1 && $subscription->isEmpty()) {
+            return response()->json(['message' => 'You can not cancel the free subscription.'], 400);
+        }
+
+        $current_package->update(['self_cancel' => 1]);
+        $subscription->update(['self_cancel' => 1]);
+
+        return response()->json(['message' => 'Subscription canceled successfully.'], 200);
     }
 
     public function getAllUsers(Request $request)

@@ -31,10 +31,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('user/disable', [UserController::class, 'disableAccount']);
     Route::get('random-user', [UserController::class, 'getRandomUserByPostalCode']);
     Route::get('all-users', [UserController::class, 'getAllUsers']);
-    Route::get('check-subscription', [UserController::class, 'checkSubscriptionStatus']);
-    Route::get('current-package', [UserController::class, 'checkCurrentPackage']);
     Route::post('change-password', [AuthController::class, 'changePassword']);
     Route::delete('user-delete', [UserController::class, 'deleteUser']);
+
+    /*Package*/
+    Route::get('check-subscription', [UserController::class, 'checkSubscriptionStatus']);
+    Route::get('current-package', [UserController::class, 'checkCurrentPackage']);
+    Route::get('cancel-subscription', [UserController::class, 'cancelSubscription']);
 
     /*Chat*/
     Route::post('set-message', [ChatController::class, 'setMessage']);
